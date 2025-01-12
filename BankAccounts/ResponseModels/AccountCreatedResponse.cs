@@ -1,4 +1,5 @@
-﻿using BankAccounts.RequestModel;
+﻿using BankAccounts.Models;
+using BankAccounts.RequestModel;
 
 namespace BankAccounts.ResponseModels
 {
@@ -10,6 +11,7 @@ namespace BankAccounts.ResponseModels
         public bool IsCreated { get; set; }
         public DateTime CreatedDate { get; set; }
         public string Message { get; set; }
+        public AccountType AccountType { get; set; }
 
     }
 }

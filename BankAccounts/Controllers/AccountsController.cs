@@ -1,7 +1,11 @@
-﻿using BankAccounts.Repositories;
+﻿using BankAccounts.Exceptions;
+using BankAccounts.Models;
+using BankAccounts.Repositories;
 using BankAccounts.RequestModel;
 using BankAccounts.ResponseModels;
 using BankAccounts.Services;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 
@@ -15,14 +19,25 @@ namespace BankAccounts.Controllers
         [HttpGet]
         public ActionResult<string> GetAllAccounts()
         {
-            var allAccounts = AccountService.GetAccounts();
-
-            if (allAccounts == null)
+            try
             {
-                return NotFound(new { message = "Accounts not found in Database." });
-            }
+                var allAccounts = AccountService.GetAccounts();
 
-            return Ok(allAccounts);
+                return Ok(allAccounts);
+
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (DontExistException ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
 
         [HttpGet("query/{id}")]
@@ -43,14 +58,24 @@ namespace BankAccounts.Controllers
         [HttpGet("{id}")]
         public ActionResult<string> GetAccountById([FromRoute] int id)
         {
-            var account = AccountService.GetAccount(id);
+            try 
+            { 
+                var account = AccountService.GetAccount(id);
 
-            if (account == null)
-            {
-                return NotFound(new { message = "Account not found." });
+                return Ok(account);
             }
-
-            return Ok(account);
+            catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (DontExistException ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
 
         // POST api/<AccountsController>
@@ -58,15 +83,17 @@ namespace BankAccounts.Controllers
         public ActionResult CreateAccount([FromBody] AccountRequest request)
         {
             AccountService.AddAccount(request);
+
             return Ok();
         }
 
         // PUT api/<AccountsController>/5
         [HttpPut("{id}")]
-        public string UpdateAccountById([FromRoute] int id, [FromBody] string name)
+        public ActionResult UpdateAccountById([FromRoute] int id, [FromBody] UpdateAccountRequets updateRequest)
         {
-            throw new Exception();
-            return $"Account {id} updated to new name {name}";
+            AccountService.UpdateAccount(id,updateRequest);
+
+            return Accepted();
         }
 
         // DELETE api/<AccountsController>/5
