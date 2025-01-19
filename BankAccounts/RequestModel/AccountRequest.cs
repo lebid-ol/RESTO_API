@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using BankAccounts.Models;
 
 namespace BankAccounts.RequestModel
 {
@@ -8,5 +9,6 @@ namespace BankAccounts.RequestModel
         public string AccountHolderName { get; set; }
         public string Email { get; set; }
         public string AccountHolderLastName { get; set; }
+        public AccountType AccountType { get; set; }
     }
 }

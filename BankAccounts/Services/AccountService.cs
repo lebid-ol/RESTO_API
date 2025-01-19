@@ -68,12 +68,30 @@ namespace BankAccounts.Services
         {
             var findAllAccount = AccountsRepository.GetAllAccountsFromData();
 
-            if (findAllAccount == null)
-            {
-                return null;
-            }
-
             return findAllAccount;
+
+        }
+
+        public static void UpdateAccount(int id, UpdateAccountRequets requets)
+        {
+            var updatedAccount = new Account()
+            {
+                Id = id,
+                AccountEmail = requets.AccountEmail,
+                AccountName = requets.AccountName,
+                UserLastName = requets.UserLastName,   
+                UserName = requets.UserName,
+            };
+
+
+            AccountsRepository.UpdateAccountRecord(updatedAccount);
+        }
+
+        public static Account DeleteAccount(int id)
+        {
+            var deleteAccount = AccountsRepository.DeleteAccountFromData(id);
+
+            return deleteAccount;
 
         }
 
