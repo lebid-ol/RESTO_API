@@ -58,8 +58,8 @@ namespace BankAccounts.Controllers
         [HttpGet("{id}")]
         public ActionResult<string> GetAccountById([FromRoute] int id)
         {
-            try 
-            { 
+            try
+            {
                 var account = AccountService.GetAccount(id);
 
                 return Ok(account);
@@ -91,16 +91,36 @@ namespace BankAccounts.Controllers
         [HttpPut("{id}")]
         public ActionResult UpdateAccountById([FromRoute] int id, [FromBody] UpdateAccountRequets updateRequest)
         {
-            AccountService.UpdateAccount(id,updateRequest);
+            AccountService.UpdateAccount(id, updateRequest);
 
             return Accepted();
         }
 
         // DELETE api/<AccountsController>/5
         [HttpDelete("{id}")]
-        public string DeleteAccountById(int id)
+        public ActionResult<string> DeleteAccountById([FromRoute] int id)
         {
-            return $"Account with ID {id} was deleted";
+            try
+            {
+                var deleteOneAccount = AccountService.DeleteAccount(id);
+
+                return Ok($"Account Id {deleteOneAccount.Id} with FirstName {deleteOneAccount.UserName} and LastName  {deleteOneAccount.UserLastName} was deleted");
+
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (DontExistException ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+
         }
+
     }
 }

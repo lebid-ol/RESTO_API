@@ -20,14 +20,14 @@ namespace BankAccounts.Repositories
                     csv.WriteRecords(accounts);
                 }
             }
-            else 
+            else
             {
                 // Append to the file.
                 var config = new CsvConfiguration(CultureInfo.InvariantCulture)
                 {
                     // Don't write the header again.
                     HasHeaderRecord = false,
-                    
+
                 };
 
                 using (var stream = File.Open(TABLE_NAME, FileMode.Append))
@@ -56,10 +56,10 @@ namespace BankAccounts.Repositories
                 if (records.Any())
                 {
                     var record = records.FirstOrDefault(x => x.Id == accountId);
-                    if (record != null) 
+                    if (record != null)
                     {
                         return record;
-                    } 
+                    }
                     else
                     {
                         throw new NotFoundException("No account records found");
@@ -83,7 +83,7 @@ namespace BankAccounts.Repositories
             using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
             {
                 var results = csv.GetRecords<Account>().ToList();
-               
+
                 if (results.Any())
                 {
                     return results;
@@ -137,14 +137,57 @@ namespace BankAccounts.Repositories
                     throw new NotFoundException("No account records found");
                 }
             }
-            else 
+            else
             {
                 throw new NotFoundException("No account records found");
             }
         }
 
+        public static Account DeleteAccountFromData(int accountId)
+        {
+            if (!File.Exists(TABLE_NAME))
+            {
+                throw new DontExistException("Account table do not exist");
+            }
+
+            var records = new List<Account>();
+
+            using (var reader = new StreamReader(TABLE_NAME))
+            using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+            {
+                records = csv.GetRecords<Account>().ToList();
+            }
+
+            if (records.Any())
+                {
+                    var record = records.FirstOrDefault(x => x.Id == accountId);
+                    if (record != null)
+                    {
+                        var updatedRecords = records.Where(record => record.Id != accountId).ToList();
+
+                        using (var writer = new StreamWriter(TABLE_NAME))
+                        using (var csvToUpdate = new CsvWriter(writer, CultureInfo.InvariantCulture))
+                        {
+                            csvToUpdate.WriteRecords(updatedRecords);
+                        }
+
+                        return record;
+                    }
+                    else
+                    {
+                        throw new NotFoundException("No account records found");
+                    }
+                }
+            else
+                {
+                    throw new NotFoundException("No account records found");
+                }
+            }
+        }
+
     }
-}
+
+
 
 
  

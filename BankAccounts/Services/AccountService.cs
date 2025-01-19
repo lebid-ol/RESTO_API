@@ -87,5 +87,13 @@ namespace BankAccounts.Services
             AccountsRepository.UpdateAccountRecord(updatedAccount);
         }
 
+        public static Account DeleteAccount(int id)
+        {
+            var deleteAccount = AccountsRepository.DeleteAccountFromData(id);
+
+            return deleteAccount;
+
+        }
+
     }
 }
