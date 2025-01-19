@@ -1,7 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
-using BankAccounts.Models;
+﻿using BankAccounts.Models;
 
-namespace BankAccounts.RequestModel
+namespace BankAccounts.Shared.Models.Request
 {
     public class AccountRequest
     {

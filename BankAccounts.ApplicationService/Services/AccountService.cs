@@ -1,6 +1,7 @@
 ﻿using BankAccounts.Records;
 using BankAccounts.Repositories;
 using BankAccounts.RequestModel;
+using BankAccounts.Shared.Models.Request;
 
 namespace BankAccounts.Services
 {
@@ -90,7 +91,7 @@ namespace BankAccounts.Services
             AccountsRepository.DeleteAccountFromData(id);
         }
 
-        internal static Account GetAccountByName(string name)
+        public static Account GetAccountByName(string name)
         {
            return AccountsRepository.GetAccountByName(name);
         }
