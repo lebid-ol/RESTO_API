@@ -5,9 +5,16 @@ using BankAccounts.Shared.Models.Request;
 
 namespace BankAccounts.Services
 {
-    public static class AccountService
+    public class AccountService
     {
-        public static Account AddAccount(AccountRequest accountRequest)
+        private readonly AccountsRepository _accountsRepository;
+
+        public AccountService()
+        {
+            _accountsRepository = new AccountsRepository();
+        }
+
+        public Account AddAccount(AccountRequest accountRequest)
         {
 
             var account = new Account()
@@ -26,12 +33,12 @@ namespace BankAccounts.Services
                 account
             };
 
-            AccountsRepository.AddAcountRecord(accounts);
+            _accountsRepository.AddAcountRecord(accounts);
 
             return account;
         }
 
-        private static int GetNextAccountID() 
+        private int GetNextAccountID() 
         {
             if (!File.Exists("accountId.txt"))
             {
@@ -50,9 +57,9 @@ namespace BankAccounts.Services
 
         }
 
-        public static Account? GetAccount(int id)
+        public Account? GetAccount(int id)
         {
-            var findAccount = AccountsRepository.GetOneAccountFromData(id);
+            var findAccount = _accountsRepository.GetOneAccountFromData(id);
                 
             if (findAccount == null)
             {
@@ -63,15 +70,15 @@ namespace BankAccounts.Services
 
         }
 
-        public static List <Account> GetAccounts()
+        public List <Account> GetAccounts()
         {
-            var findAllAccount = AccountsRepository.GetAllAccountsFromData();
+            var findAllAccount = _accountsRepository.GetAllAccountsFromData();
 
             return findAllAccount;
 
         }
 
-        public static Account UpdateAccount(int id, UpdateAccountRequets requets)
+        public Account UpdateAccount(int id, UpdateAccountRequets requets)
         {
             var updatedAccount = new Account()
             {
@@ -83,17 +90,17 @@ namespace BankAccounts.Services
             };
 
 
-            return AccountsRepository.UpdateAccountRecord(updatedAccount);
+            return _accountsRepository.UpdateAccountRecord(updatedAccount);
         }
 
-        public static void DeleteAccount(int id)
+        public void DeleteAccount(int id)
         {
-            AccountsRepository.DeleteAccountFromData(id);
+            _accountsRepository.DeleteAccountFromData(id);
         }
 
-        public static Account GetAccountByName(string name)
+        public Account GetAccountByName(string name)
         {
-           return AccountsRepository.GetAccountByName(name);
+           return _accountsRepository.GetAccountByName(name);
         }
     }
 }

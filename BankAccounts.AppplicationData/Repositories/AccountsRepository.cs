@@ -6,11 +6,11 @@ using System.Globalization;
 
 namespace BankAccounts.Repositories
 {
-    public static class AccountsRepository
+    public class AccountsRepository
     {
         private const string TABLE_NAME = "accounts.csv";
 
-        public static void AddAcountRecord(List<Account> accounts)
+        public void AddAcountRecord(List<Account> accounts)
         {
             if (!File.Exists(TABLE_NAME))
             {
@@ -41,7 +41,7 @@ namespace BankAccounts.Repositories
 
         }
 
-        public static Account GetOneAccountFromData(int accountId)
+        public Account GetOneAccountFromData(int accountId)
         {
             if (!File.Exists(TABLE_NAME))
             {
@@ -72,7 +72,7 @@ namespace BankAccounts.Repositories
             }
         }
 
-        public static List<Account> GetAllAccountsFromData()
+        public List<Account> GetAllAccountsFromData()
         {
             if (!File.Exists(TABLE_NAME))
             {
@@ -95,7 +95,7 @@ namespace BankAccounts.Repositories
             }
         }
 
-        public static Account UpdateAccountRecord(Account account)
+        public Account UpdateAccountRecord(Account account)
         {
             if (!File.Exists(TABLE_NAME))
             {
@@ -144,7 +144,7 @@ namespace BankAccounts.Repositories
             }
         }
 
-        public static void DeleteAccountFromData(int accountId)
+        public void DeleteAccountFromData(int accountId)
         {
             if (!File.Exists(TABLE_NAME))
             {
@@ -184,7 +184,7 @@ namespace BankAccounts.Repositories
                 }
             }
 
-        public static Account GetAccountByName(string name)
+        public Account GetAccountByName(string name)
         {
             if (!File.Exists(TABLE_NAME))
             {

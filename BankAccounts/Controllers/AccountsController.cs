@@ -12,13 +12,21 @@ namespace BankAccounts.Controllers
     [ApiController]
     public class AccountsController : ControllerBase
     {
+        private readonly AccountService _accountService;
+
+        public AccountsController()
+        {
+             _accountService = new AccountService();
+        }
+
         // GET: api/<AccountsController>
         [HttpGet]
         public ActionResult<List<Account>> GetAllAccounts()
         {
             try
             {
-                var allAccounts = AccountService.GetAccounts();
+                var accountService = new AccountService();
+                var allAccounts = _accountService.GetAccounts();
 
                 return Ok(allAccounts);
 
@@ -46,8 +54,8 @@ namespace BankAccounts.Controllers
                 return BadRequest("Missing name");
 
             }
-
-            var account = AccountService.GetAccountByName(name);
+            var accountService = new AccountService();
+            var account = _accountService.GetAccountByName(name);
 
             return Ok(account);
 
@@ -59,7 +67,7 @@ namespace BankAccounts.Controllers
         {
             try
             {
-                var account = AccountService.GetAccount(id);
+                var account = _accountService.GetAccount(id);
 
                 return Ok(account);
             }
@@ -83,7 +91,7 @@ namespace BankAccounts.Controllers
         {
             try
             {
-                var account = AccountService.AddAccount(request);
+                var account = _accountService.AddAccount(request);
 
                 return Ok(account);
             }
@@ -99,7 +107,7 @@ namespace BankAccounts.Controllers
         {
             try
             {
-                var updatedAccount = AccountService.UpdateAccount(id, updateRequest);
+                var updatedAccount = _accountService.UpdateAccount(id, updateRequest);
 
                 return Accepted(updatedAccount);
             }
@@ -123,7 +131,7 @@ namespace BankAccounts.Controllers
         {
             try
             {
-                AccountService.DeleteAccount(id);
+                _accountService.DeleteAccount(id);
 
                 return NoContent();
 
