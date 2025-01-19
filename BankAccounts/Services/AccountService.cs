@@ -1,16 +1,12 @@
 ﻿using BankAccounts.Records;
 using BankAccounts.Repositories;
 using BankAccounts.RequestModel;
-using CsvHelper;
-using System.Globalization;
-using System.Security.Principal;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace BankAccounts.Services
 {
     public static class AccountService
     {
-        public static void AddAccount(AccountRequest accountRequest)
+        public static Account AddAccount(AccountRequest accountRequest)
         {
 
             var account = new Account()
@@ -24,12 +20,14 @@ namespace BankAccounts.Services
                 UserName = accountRequest.AccountHolderName
             };
 
-            var accounts = new List<Account>();
-
-            accounts.Add(account);
+            var accounts = new List<Account>()
+            {
+                account
+            };
 
             AccountsRepository.AddAcountRecord(accounts);
 
+            return account;
         }
 
         private static int GetNextAccountID() 
@@ -72,7 +70,7 @@ namespace BankAccounts.Services
 
         }
 
-        public static void UpdateAccount(int id, UpdateAccountRequets requets)
+        public static Account UpdateAccount(int id, UpdateAccountRequets requets)
         {
             var updatedAccount = new Account()
             {
@@ -84,16 +82,17 @@ namespace BankAccounts.Services
             };
 
 
-            AccountsRepository.UpdateAccountRecord(updatedAccount);
+            return AccountsRepository.UpdateAccountRecord(updatedAccount);
         }
 
-        public static Account DeleteAccount(int id)
+        public static void DeleteAccount(int id)
         {
-            var deleteAccount = AccountsRepository.DeleteAccountFromData(id);
-
-            return deleteAccount;
-
+            AccountsRepository.DeleteAccountFromData(id);
         }
 
+        internal static Account GetAccountByName(string name)
+        {
+           return AccountsRepository.GetAccountByName(name);
+        }
     }
 }
