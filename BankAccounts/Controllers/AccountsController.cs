@@ -1,10 +1,12 @@
-﻿using BankAccounts.Exceptions;
+﻿using BankAccounts.API.DI_test;
+using BankAccounts.Exceptions;
 using BankAccounts.Records;
 using BankAccounts.RequestModel;
 using BankAccounts.Services;
 using BankAccounts.Shared.Models.Request;
 using CsvHelper;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 namespace BankAccounts.Controllers
 {
@@ -12,11 +14,13 @@ namespace BankAccounts.Controllers
     [ApiController]
     public class AccountsController : ControllerBase
     {
-        private readonly AccountService _accountService;
+        private readonly AccountServiceV2 _accountService;
 
-        public AccountsController()
+
+        public AccountsController(AccountServiceV2 accountService)
         {
-             _accountService = new AccountService();
+             _accountService = accountService;
+           
         }
 
         // GET: api/<AccountsController>
@@ -25,7 +29,6 @@ namespace BankAccounts.Controllers
         {
             try
             {
-                var accountService = new AccountService();
                 var allAccounts = _accountService.GetAccounts();
 
                 return Ok(allAccounts);
@@ -54,7 +57,6 @@ namespace BankAccounts.Controllers
                 return BadRequest("Missing name");
 
             }
-            var accountService = new AccountService();
             var account = _accountService.GetAccountByName(name);
 
             return Ok(account);
@@ -67,12 +69,14 @@ namespace BankAccounts.Controllers
         {
             try
             {
+
                 var account = _accountService.GetAccount(id);
 
                 return Ok(account);
             }
             catch (NotFoundException ex)
             {
+    
                 return NotFound(ex.Message);
             }
             catch (DontExistException ex)

@@ -1,4 +1,5 @@
-﻿using BankAccounts.Exceptions;
+﻿using BankAccounts.API.DI_test;
+using BankAccounts.Exceptions;
 using BankAccounts.Records;
 using CsvHelper;
 using CsvHelper.Configuration;
@@ -9,6 +10,12 @@ namespace BankAccounts.Repositories
     public class AccountsRepository
     {
         private const string TABLE_NAME = "accounts.csv";
+
+
+        public AccountsRepository()
+        {
+            Console.WriteLine("Init");
+        }
 
         public void AddAcountRecord(List<Account> accounts)
         {
@@ -43,6 +50,8 @@ namespace BankAccounts.Repositories
 
         public Account GetOneAccountFromData(int accountId)
         {
+           
+
             if (!File.Exists(TABLE_NAME))
             {
                 throw new DontExistException("Account table do not exist");
