@@ -14,10 +14,10 @@ namespace BankAccounts.Controllers
     [ApiController]
     public class AccountsController : ControllerBase
     {
-        private readonly AccountServiceV2 _accountService;
+        private readonly AccountService _accountService;
 
 
-        public AccountsController(AccountServiceV2 accountService)
+        public AccountsController(AccountService accountService)
         {
              _accountService = accountService;
            
