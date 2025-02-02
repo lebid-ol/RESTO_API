@@ -1,37 +1,31 @@
-﻿using BankAccounts.API.DI_test;
+﻿using BankAccounts.AppplicationData.Records;
 using BankAccounts.Exceptions;
-using BankAccounts.Records;
-using BankAccounts.RequestModel;
 using BankAccounts.Services;
-using BankAccounts.Shared.Models.Request;
-using CsvHelper;
+using BankAccounts.Shared.Models.Requests;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
-namespace BankAccounts.Controllers
+namespace BankAccounts.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class AccountsController : ControllerBase
+    public class UserController : ControllerBase
     {
-        private readonly AccountService _accountService;
+        private readonly UserService _userService;
 
-
-        public AccountsController(AccountService accountService)
+        public UserController(UserService userService)
         {
-             _accountService = accountService;
-           
+            _userService = userService;
         }
 
-        // GET: api/<AccountsController>
+        //GET: api/<UserController>
         [HttpGet]
-        public ActionResult<List<Account>> GetAllAccounts()
+        public ActionResult<List<User>> GetAllUsers()
         {
             try
             {
-                var allAccounts = _accountService.GetAccounts();
+                var allUsers = _userService.GetUsers();
 
-                return Ok(allAccounts);
+                return Ok(allUsers);
 
             }
             catch (NotFoundException ex)
@@ -49,34 +43,32 @@ namespace BankAccounts.Controllers
         }
 
         [HttpGet("query")]
-        public ActionResult<Account> GetAllAccountsQuery([FromQuery] string name)
+        public ActionResult<User> GetAllUsersQuery([FromQuery] string name)
         {
             if (string.IsNullOrEmpty(name))
             {
-         
+
                 return BadRequest("Missing name");
 
             }
-            var account = _accountService.GetAccountByName(name);
+               var user = _userService.GetUserByName(name);
 
-            return Ok(account);
+            return Ok(user);
 
         }
 
-        // GET api/<AccountsController>/5
+        // GET api/<UsersController>/5
         [HttpGet("{id}")]
-        public ActionResult<Account> GetAccountById([FromRoute] int id)
+        public ActionResult<User> GetUserById([FromRoute] int id)
         {
             try
             {
+                var user = _userService.GetUser(id);
 
-                var account = _accountService.GetAccount(id);
-
-                return Ok(account);
+                return Ok(user);
             }
             catch (NotFoundException ex)
             {
-    
                 return NotFound(ex.Message);
             }
             catch (DontExistException ex)
@@ -91,29 +83,29 @@ namespace BankAccounts.Controllers
 
         // POST api/<AccountsController>
         [HttpPost]
-        public ActionResult<Account> CreateAccount([FromBody] AccountRequest request)
+        public ActionResult<User> CreateUser([FromBody] UserRequest request)
         {
             try
             {
-                var account = _accountService.AddAccount(request);
+                var user = _userService.AddUser(request);
 
-                return Ok(account);
+                return Ok(user);
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
-                return StatusCode(500, ex.Message); 
+                return StatusCode(500, ex.Message);
             }
         }
 
-        // PUT api/<AccountsController>/5
+        // PUT api/<UsersController>/5
         [HttpPut("{id}")]
-        public ActionResult UpdateAccountById([FromRoute] int id, [FromBody] UpdateAccountRequets updateRequest)
+        public ActionResult UpdateUserById([FromRoute] int id, [FromBody] UpdateUserRequest updateRequest)
         {
             try
             {
-                var updatedAccount = _accountService.UpdateAccount(id, updateRequest);
+                var updatedUser = _userService.UpdateUser(id, updateRequest);
 
-                return Accepted(updatedAccount);
+                return Accepted(updatedUser);
             }
             catch (NotFoundException ex)
             {
@@ -129,13 +121,13 @@ namespace BankAccounts.Controllers
             }
         }
 
-        // DELETE api/<AccountsController>/5
+        // DELETE api/<UsersController>/5
         [HttpDelete("{id}")]
-        public ActionResult<string> DeleteAccountById([FromRoute] int id)
+        public ActionResult<User> DeleteUserById([FromRoute] int id)
         {
             try
             {
-                _accountService.DeleteAccount(id);
+                _userService.DeleteUser(id);
 
                 return NoContent();
 
@@ -156,3 +148,4 @@ namespace BankAccounts.Controllers
 
     }
 }
+
