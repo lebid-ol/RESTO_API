@@ -15,7 +15,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\BankAccounts.ApplicationService\BankAccounts.ApplicationService.csproj" />
-    <ProjectReference Include="..\BankAccounts.Shared\BankAccounts.Shared.csproj" />
   </ItemGroup>
 
 

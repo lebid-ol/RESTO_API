@@ -10,16 +10,16 @@ namespace BankAccounts.API.Controllers
     [ApiController]
     public class UserController : ControllerBase
     {
-        private readonly UserService _userService;
+        private readonly IUserService _userService;
 
-        public UserController(UserService userService)
+        public UserController(IUserService userService)
         {
             _userService = userService;
         }
 
         //GET: api/<UserController>
         [HttpGet]
-        public ActionResult<List<User>> GetAllUsers()
+        public ActionResult<List<UserEntity>> GetAllUsers()
         {
             try
             {
@@ -43,7 +43,7 @@ namespace BankAccounts.API.Controllers
         }
 
         [HttpGet("query")]
-        public ActionResult<User> GetAllUsersQuery([FromQuery] string name)
+        public ActionResult<UserEntity> GetAllUsersQuery([FromQuery] string name)
         {
             if (string.IsNullOrEmpty(name))
             {
@@ -59,7 +59,7 @@ namespace BankAccounts.API.Controllers
 
         // GET api/<UsersController>/5
         [HttpGet("{id}")]
-        public ActionResult<User> GetUserById([FromRoute] int id)
+        public ActionResult<UserEntity> GetUserById([FromRoute] int id)
         {
             try
             {
@@ -83,11 +83,11 @@ namespace BankAccounts.API.Controllers
 
         // POST api/<AccountsController>
         [HttpPost]
-        public ActionResult<User> CreateUser([FromBody] UserRequest request)
+        public ActionResult<UserEntity> CreateUser([FromBody] UserRequest request)
         {
             try
             {
-                var user = _userService.AddUser(request);
+                var user = _userService.AddUser(new Shared.Models.User());
 
                 return Ok(user);
             }
@@ -103,7 +103,7 @@ namespace BankAccounts.API.Controllers
         {
             try
             {
-                var updatedUser = _userService.UpdateUser(id, updateRequest);
+                var updatedUser = _userService.UpdateUser(id, new Shared.Models.UserUpdate());
 
                 return Accepted(updatedUser);
             }
@@ -123,7 +123,7 @@ namespace BankAccounts.API.Controllers
 
         // DELETE api/<UsersController>/5
         [HttpDelete("{id}")]
-        public ActionResult<User> DeleteUserById([FromRoute] int id)
+        public ActionResult<UserEntity> DeleteUserById([FromRoute] int id)
         {
             try
             {

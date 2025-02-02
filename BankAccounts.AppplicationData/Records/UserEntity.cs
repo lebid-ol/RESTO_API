@@ -2,7 +2,7 @@
 
 namespace BankAccounts.AppplicationData.Records
 {
-    public class User 
+    public class UserEntity 
     {
         public int Id { get; set; }
         public string UserName { get; set; }

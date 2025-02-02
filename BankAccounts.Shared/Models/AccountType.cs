@@ -1,4 +1,4 @@
-﻿namespace BankAccounts.Models
+﻿namespace BankAccounts.Shared.Models
 {
     public enum AccountType
     {

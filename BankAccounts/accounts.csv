@@ -1,9 +1,4 @@
-Id,AccountName,AccountEmail,UserName,UserLastName,Balance,CreatedDate
-8,Saving,sergei@gmail.com,Sergei,Belialov,0,01/12/2025 08:52:05
-9,Saving,sergei@gmail.com,Sergei,Belialov,0,01/12/2025 08:52:59
-10,Saving,sergei@gmail.com,Sergei,Belialov,0,01/12/2025 08:54:03
-11,Saving,sergei@gmail.com,Sergei,Belialov,0,01/12/2025 08:54:31
-12,Saving,sergei@gmail.com,Sergei,Belialov,0,01/12/2025 08:56:05
-13,Saving,sergei@gmail.com,Sergei,Belialov,0,01/12/2025 09:17:49
-14,Test,sergei@gmail.com,Sergei,Belialov,0,01/19/2025 08:32:02
-15,Saving123,sergei@gmail.com123,Sergei123,Belialov123,0,01/19/2025 09:27:50
+Id,Balance,CreatedDate,UpdateDate,AccountName,AccountType,OwnerUserId
+1,100,02/02/2025 09:57:17,02/02/2025 09:58:28,Saving123,0,1
+2,100,02/02/2025 10:01:00,01/01/0001 00:00:00,HomeAccount23,0,1
+3,100,02/02/2025 10:02:45,01/01/0001 00:00:00,HomeAccount21231233,0,1

@@ -1,5 +1,4 @@
-﻿using BankAccounts.Models;
-using BankAccounts.Shared.Models.Request;
+﻿using BankAccounts.Shared.Models.Request;
 using System;
 using System.Collections.Generic;
 using System.Linq;

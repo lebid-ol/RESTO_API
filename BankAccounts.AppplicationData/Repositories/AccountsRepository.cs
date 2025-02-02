@@ -1,13 +1,22 @@
-﻿using BankAccounts.API.DI_test;
-using BankAccounts.Exceptions;
+﻿using BankAccounts.Exceptions;
 using BankAccounts.Records;
+using BankAccounts.Shared.Models;
 using CsvHelper;
 using CsvHelper.Configuration;
 using System.Globalization;
 
 namespace BankAccounts.Repositories
 {
-    public class AccountsRepository
+    public interface IAccountRepository
+    {
+        Account AddAcountRecord(Account accounts);
+        Account GetOneAccountFromData(int accountId);
+        List<Account> GetAllAccountsFromData();
+        Account UpdateAccountRecord(UpdateAccount account);
+        void DeleteAccountFromData(int accountId);
+    }
+
+    public class AccountsRepository : IAccountRepository
     {
         private const string TABLE_NAME = "accounts.csv";
 
@@ -17,8 +26,22 @@ namespace BankAccounts.Repositories
             Console.WriteLine("Init");
         }
 
-        public void AddAcountRecord(List<Account> accounts)
+        public Account AddAcountRecord(Account account)
         {
+            var nextId = GetNextAccountID();
+
+            var accountEntity = new AccountEntity
+            {
+                AccountName = account.AccountName,
+                AccountType = account.AccountType,
+                CreatedDate = account.CreatedDate,
+                Balance = account.Balance,
+                OwnerUserId = account.OwnerUserId,
+                Id = nextId,
+            };
+
+            var accounts = new List<AccountEntity>() { accountEntity };
+
             if (!File.Exists(TABLE_NAME))
             {
                 using var writer = new StreamWriter(TABLE_NAME);
@@ -45,13 +68,13 @@ namespace BankAccounts.Repositories
                 }
             }
 
+            account.Id = nextId;
+            return account;
 
         }
 
         public Account GetOneAccountFromData(int accountId)
         {
-           
-
             if (!File.Exists(TABLE_NAME))
             {
                 throw new DontExistException("Account table do not exist");
@@ -60,14 +83,24 @@ namespace BankAccounts.Repositories
             using (var reader = new StreamReader(TABLE_NAME))
             using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
             {
-                var records = csv.GetRecords<Account>().ToList();
+                var records = csv.GetRecords<AccountEntity>().ToList();
 
                 if (records.Any())
                 {
                     var record = records.FirstOrDefault(x => x.Id == accountId);
                     if (record != null)
                     {
-                        return record;
+                        var account = new Account()
+                        {
+                            Id = record.Id,
+                            AccountName = record.AccountName,
+                            AccountType = record.AccountType,
+                            Balance = record.Balance,
+                            CreatedDate = record.CreatedDate,
+                            OwnerUserId = record.OwnerUserId,
+                        };
+
+                        return account;
                     }
                     else
                     {
@@ -91,11 +124,28 @@ namespace BankAccounts.Repositories
             using (var reader = new StreamReader(TABLE_NAME))
             using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
             {
-                var results = csv.GetRecords<Account>().ToList();
+                var results = csv.GetRecords<AccountEntity>().ToList();
 
                 if (results.Any())
                 {
-                    return results;
+                    var accountList = new List<Account>();
+
+                    foreach (var record in results)
+                    {
+                        var account = new Account()
+                        {
+                            Id = record.Id,
+                            AccountName = record.AccountName,
+                            AccountType = record.AccountType,
+                            Balance = record.Balance,
+                            CreatedDate = record.CreatedDate,
+                            OwnerUserId = record.OwnerUserId,
+                        };
+
+                        accountList.Add(account);
+                    }
+
+                    return accountList;
                 }
                 else
                 {
@@ -104,20 +154,20 @@ namespace BankAccounts.Repositories
             }
         }
 
-        public Account UpdateAccountRecord(Account account)
+        public Account UpdateAccountRecord(UpdateAccount account)
         {
             if (!File.Exists(TABLE_NAME))
             {
                 throw new DontExistException("Account table do not exist");
             }
 
-            var results = new List<Account>();
+            var results = new List<AccountEntity>();
 
             // получить все данные
             using (var reader = new StreamReader(TABLE_NAME))
             using (var csvReader = new CsvReader(reader, CultureInfo.InvariantCulture))
             {
-                results = csvReader.GetRecords<Account>().ToList();
+                results = csvReader.GetRecords<AccountEntity>().ToList();
             }
 
             if (results.Any())
@@ -127,9 +177,7 @@ namespace BankAccounts.Repositories
                 if (record != null)
                 {
                     record.AccountName = account.AccountName;
-                    record.AccountEmail = account.AccountEmail;
-                    record.UserName = account.UserName;
-                    record.UserLastName = account.UserLastName;
+                    record.UpdateDate = account.UpdateDate;
 
                     var index = results.FindIndex(x => x.Id == account.Id);
 
@@ -139,7 +187,19 @@ namespace BankAccounts.Repositories
                     using var csvWriter = new CsvWriter(writer, CultureInfo.InvariantCulture);
                     {
                         csvWriter.WriteRecords(results);
-                        return record;
+
+                        var updatedAccount = new Account()
+                        {
+                            Id = record.Id,
+                            AccountName = record.AccountName,
+                            AccountType = record.AccountType,
+                            Balance = record.Balance,
+                            CreatedDate = record.CreatedDate,
+                            OwnerUserId = record.OwnerUserId,
+                            UpdateDate  = record.UpdateDate
+                        };
+
+                        return updatedAccount;
                     }
                 }
                 else
@@ -160,12 +220,12 @@ namespace BankAccounts.Repositories
                 throw new DontExistException("Account table do not exist");
             }
 
-            var records = new List<Account>();
+            var records = new List<AccountEntity>();
 
             using (var reader = new StreamReader(TABLE_NAME))
             using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
             {
-                records = csv.GetRecords<Account>().ToList();
+                records = csv.GetRecords<AccountEntity>().ToList();
             }
 
             if (records.Any())
@@ -191,41 +251,30 @@ namespace BankAccounts.Repositories
                 {
                     throw new NotFoundException("No account records found");
                 }
-            }
+        }
 
-        public Account GetAccountByName(string name)
+        private int GetNextAccountID()
         {
-            if (!File.Exists(TABLE_NAME))
+            if (!File.Exists("accountId.txt"))
             {
-                throw new DontExistException("Account table do not exist");
+                File.WriteAllText("accountId.txt", "1");
+
+                return 1;
+            }
+            else
+            {
+                var id = File.ReadAllText("accountId.txt");
+                var intId = int.Parse(id);
+                var nextId = intId + 1;
+                File.WriteAllText("accountId.txt", nextId.ToString());
+                return nextId;
             }
 
-            using (var reader = new StreamReader(TABLE_NAME))
-            using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
-            {
-                var records = csv.GetRecords<Account>().ToList();
-
-                if (records.Any())
-                {
-                    var record = records.FirstOrDefault(x => x.AccountName == name);
-                    if (record != null)
-                    {
-                        return record;
-                    }
-                    else
-                    {
-                        throw new NotFoundException("No account records found");
-                    }
-                }
-                else
-                {
-                    throw new NotFoundException("No account records found");
-                }
-            }
         }
     }
 
-    }
+
+}
 
 
 

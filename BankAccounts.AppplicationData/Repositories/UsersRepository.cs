@@ -3,14 +3,25 @@ using CsvHelper.Configuration;
 using CsvHelper;
 using System.Globalization;
 using BankAccounts.AppplicationData.Records;
+using System.Runtime.ConstrainedExecution;
 
 namespace BankAccounts.AppplicationData.Repositories
 {
-   public class UsersRepository
+    public interface IUserRepositoy
+    {
+        void AddUserRecord(List<UserEntity> users);
+        UserEntity GetOneUserFromData(int userId);
+        List<UserEntity> GetAllUsersFromData();
+        UserEntity UpdateUserRecord(UserEntity user);
+        void DeleteUserFromData(int userId);
+        UserEntity GetUserByName(string name);
+    }
+
+   public class UsersRepository : IUserRepositoy
     {
         private const string TABLE_NAME = "users.csv";
 
-        public void AddUserRecord(List<User> users)
+        public void AddUserRecord(List<UserEntity> users)
         {
             if (!File.Exists(TABLE_NAME))
             {
@@ -38,7 +49,7 @@ namespace BankAccounts.AppplicationData.Repositories
 
         }
 
-        public User GetOneUserFromData(int userId)
+        public UserEntity GetOneUserFromData(int userId)
         {
             if (!File.Exists(TABLE_NAME))
             {
@@ -48,7 +59,7 @@ namespace BankAccounts.AppplicationData.Repositories
             using (var reader = new StreamReader(TABLE_NAME))
             using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
             {
-                var records = csv.GetRecords<User>().ToList();
+                var records = csv.GetRecords<UserEntity>().ToList();
 
                 if (records.Any())
                 {
@@ -70,7 +81,7 @@ namespace BankAccounts.AppplicationData.Repositories
         }
 
 
-        public List<User> GetAllUsersFromData()
+        public List<UserEntity> GetAllUsersFromData()
         {
             if (!File.Exists(TABLE_NAME))
             {
@@ -80,7 +91,7 @@ namespace BankAccounts.AppplicationData.Repositories
             using (var reader = new StreamReader(TABLE_NAME))
             using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
             {
-                var results = csv.GetRecords<User>().ToList();
+                var results = csv.GetRecords<UserEntity>().ToList();
 
                 if (results.Any())
                 {
@@ -93,19 +104,19 @@ namespace BankAccounts.AppplicationData.Repositories
             }
         }
 
-        public User UpdateUserRecord(User user)
+        public UserEntity UpdateUserRecord(UserEntity user)
         {
             if (!File.Exists(TABLE_NAME))
             {
                 throw new DontExistException("User table do not exist");
             }
 
-            var results = new List<User>();
+            var results = new List<UserEntity>();
 
             using (var reader = new StreamReader(TABLE_NAME))
             using (var csvReader = new CsvReader(reader, CultureInfo.InvariantCulture))
             {
-                results = csvReader.GetRecords<User>().ToList();
+                results = csvReader.GetRecords<UserEntity>().ToList();
             }
 
             if (results.Any())
@@ -152,12 +163,12 @@ namespace BankAccounts.AppplicationData.Repositories
                 throw new DontExistException("User table do not exist");
             }
 
-            var records = new List<User>();
+            var records = new List<UserEntity>();
 
             using (var reader = new StreamReader(TABLE_NAME))
             using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
             {
-                records = csv.GetRecords<User>().ToList();
+                records = csv.GetRecords<UserEntity>().ToList();
             }
 
             if (records.Any())
@@ -186,7 +197,7 @@ namespace BankAccounts.AppplicationData.Repositories
         }
 
 
-        public User GetUserByName(string name)
+        public UserEntity GetUserByName(string name)
         {
             if (!File.Exists(TABLE_NAME))
             {
@@ -196,7 +207,7 @@ namespace BankAccounts.AppplicationData.Repositories
             using (var reader = new StreamReader(TABLE_NAME))
             using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
             {
-                var records = csv.GetRecords<User>().ToList();
+                var records = csv.GetRecords<UserEntity>().ToList();
 
                 if (records.Any())
                 {

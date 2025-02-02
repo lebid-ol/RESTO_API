@@ -1,47 +1,47 @@
 ﻿using BankAccounts.AppplicationData.Records;
 using BankAccounts.AppplicationData.Repositories;
 using BankAccounts.Records;
-using BankAccounts.Shared.Models.Requests;
+using BankAccounts.Shared.Models;
 
 namespace BankAccounts.Services
 {
     public interface IUserService
     {
-        User AddUser(UserRequest userRequest);
-        User? GetUser(int id);
-        List<UserRequest> GetUsers();
-        User UpdateUser(int id, UpdateUserRequest requets);
+        UserEntity AddUser(User userRequest);
+        UserEntity? GetUser(int id);
+        List<User> GetUsers();
+        UserEntity UpdateUser(int id, UserUpdate requets);
         void DeleteUser(int id);
-        Account GetUserByName(string name);
+        AccountEntity GetUserByName(string name);
 
     }
 
     public class UserService : IUserService
     {
-        private readonly UsersRepository _usersRepository;
+        private readonly IUserRepositoy _usersRepository;
 
-        public UserService(UsersRepository usersRepository)
+        public UserService(IUserRepositoy usersRepository)
         {
             _usersRepository = usersRepository;
 
         }
 
-        public User AddUser(UserRequest userRequest)
+        public UserEntity AddUser(User userRequest)
         {
 
-            var user = new User()
+            var user = new UserEntity()
             {
-                Email = userRequest.Email,
-                UserName = userRequest.UserName,
-                Id = GetNextUserID(),
-                UserLastName = userRequest.UserLastName,
-                PhoneNumber = userRequest.PhoneNumber,
-                DateOfBirth = userRequest.DateOfBirth,
-                Gender = userRequest.Gender,
-                BillingAddress = userRequest.BillingAddress
+                //Email = userRequest.Email,
+                //UserName = userRequest.UserName,
+                //Id = GetNextUserID(),
+                //UserLastName = userRequest.UserLastName,
+                //PhoneNumber = userRequest.PhoneNumber,
+                //DateOfBirth = userRequest.DateOfBirth,
+                //Gender = userRequest.Gender,
+                //BillingAddress = userRequest.BillingAddress
             };
 
-            var users = new List<User>()
+            var users = new List<UserEntity>()
             {
                 user
             };
@@ -70,7 +70,7 @@ namespace BankAccounts.Services
 
         }
 
-        public User? GetUser(int id)
+        public UserEntity? GetUser(int id)
         {
 
             var findUser = _usersRepository.GetOneUserFromData(id);
@@ -84,7 +84,7 @@ namespace BankAccounts.Services
 
         }
 
-        public List<User> GetUsers()
+        public List<UserEntity> GetUsers()
         {
             var findAllUser = _usersRepository.GetAllUsersFromData();
 
@@ -92,18 +92,18 @@ namespace BankAccounts.Services
 
         }
 
-        public User UpdateUser(int id, UpdateUserRequest requests)
+        public UserEntity UpdateUser(int id, UserUpdate requests)
         {
-            var updatedUser = new User()
+            var updatedUser = new UserEntity()
             {
-                Id = id,
-                Email = requests.Email,
-                UserName = requests.UserName,
-                UserLastName = requests.UserLastName,
-                PhoneNumber = requests.PhoneNumber,
-                DateOfBirth = requests.DateOfBirth,
-                Gender = requests.Gender,
-                BillingAddress = requests.BillingAddress
+                //Id = id,
+                //Email = requests.Email,
+                //UserName = requests.UserName,
+                //UserLastName = requests.UserLastName,
+                //PhoneNumber = requests.PhoneNumber,
+                //DateOfBirth = requests.DateOfBirth,
+                //Gender = requests.Gender,
+                //BillingAddress = requests.BillingAddress
 
             };
 
@@ -116,20 +116,25 @@ namespace BankAccounts.Services
             _usersRepository.DeleteUserFromData(id);
         }
 
-        public User GetUserByName(string name)
+        public UserEntity GetUserByName(string name)
         {
             return _usersRepository.GetUserByName(name);
         }
 
-        List<UserRequest> IUserService.GetUsers()
+        List<User> IUserService.GetUsers()
         {
             throw new NotImplementedException();
         }
 
-        Account IUserService.GetUserByName(string name)
+        AccountEntity IUserService.GetUserByName(string name)
         {
             throw new NotImplementedException();
         }
+
+
+       
+
+      
     }
 
 

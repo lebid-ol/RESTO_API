@@ -2,7 +2,9 @@
 using BankAccounts.Exceptions;
 using BankAccounts.Records;
 using BankAccounts.RequestModel;
+using BankAccounts.ResponseModels;
 using BankAccounts.Services;
+using BankAccounts.Shared.Models;
 using BankAccounts.Shared.Models.Request;
 using CsvHelper;
 using Microsoft.AspNetCore.Mvc;
@@ -14,18 +16,16 @@ namespace BankAccounts.Controllers
     [ApiController]
     public class AccountsController : ControllerBase
     {
-        private readonly AccountService _accountService;
+        private readonly IAccountService _accountService;
 
-
-        public AccountsController(AccountService accountService)
+        public AccountsController(IAccountService accountService)
         {
              _accountService = accountService;
-           
         }
 
         // GET: api/<AccountsController>
         [HttpGet]
-        public ActionResult<List<Account>> GetAllAccounts()
+        public ActionResult<List<AccountResponse>> GetAllAccounts()
         {
             try
             {
@@ -48,24 +48,9 @@ namespace BankAccounts.Controllers
             }
         }
 
-        [HttpGet("query")]
-        public ActionResult<Account> GetAllAccountsQuery([FromQuery] string name)
-        {
-            if (string.IsNullOrEmpty(name))
-            {
-         
-                return BadRequest("Missing name");
-
-            }
-            var account = _accountService.GetAccountByName(name);
-
-            return Ok(account);
-
-        }
-
         // GET api/<AccountsController>/5
         [HttpGet("{id}")]
-        public ActionResult<Account> GetAccountById([FromRoute] int id)
+        public ActionResult<AccountResponse> GetAccountById([FromRoute] int id)
         {
             try
             {
@@ -91,13 +76,28 @@ namespace BankAccounts.Controllers
 
         // POST api/<AccountsController>
         [HttpPost]
-        public ActionResult<Account> CreateAccount([FromBody] AccountRequest request)
+        public ActionResult<AccountResponse> CreateAccount([FromBody] AccountRequest request)
         {
             try
             {
-                var account = _accountService.AddAccount(request);
+                var newAccount = new Account()
+                {
+                    AccountName = request.AccountName,
+                    AccountType = request.AccountType,
+                    OwnerUserId = request.OwnerUserId,
+                };
 
-                return Ok(account);
+                var createdAccount = _accountService.AddAccount(newAccount);
+
+                var response = new AccountResponse()
+                {
+                    AccountName = createdAccount.AccountName,
+                    Id = createdAccount.Id,
+                    AccountType = createdAccount.AccountType,
+                    Balance = createdAccount.Balance,
+                };
+
+                return Ok(response);
             }
             catch (Exception ex) 
             {
@@ -107,11 +107,17 @@ namespace BankAccounts.Controllers
 
         // PUT api/<AccountsController>/5
         [HttpPut("{id}")]
-        public ActionResult UpdateAccountById([FromRoute] int id, [FromBody] UpdateAccountRequets updateRequest)
+        public ActionResult<AccountResponse> UpdateAccountById([FromRoute] int id, [FromBody] UpdateAccountRequets updateRequest)
         {
             try
             {
-                var updatedAccount = _accountService.UpdateAccount(id, updateRequest);
+                var upodateAccount = new UpdateAccount()
+                {
+                    Id = id,
+                    AccountName = updateRequest.AccountName,
+                };
+
+                var updatedAccount = _accountService.UpdateAccount(upodateAccount);
 
                 return Accepted(updatedAccount);
             }
