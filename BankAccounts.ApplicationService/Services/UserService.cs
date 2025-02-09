@@ -33,7 +33,7 @@ namespace BankAccounts.Services
              return createdUser;
         }
 
-        private int GetNextUserID()
+        public int GetNextUserID()
         {
             if (!File.Exists("userId.txt"))
             {

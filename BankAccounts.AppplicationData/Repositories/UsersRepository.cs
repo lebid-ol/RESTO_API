@@ -87,7 +87,6 @@ namespace BankAccounts.AppplicationData.Repositories
                     {
                         var user = new User()
                         {
-                            UserId = record.UserId,
                             UserName = record.UserName,
                             Email = record.Email,
                             UserLastName = record.UserLastName,
