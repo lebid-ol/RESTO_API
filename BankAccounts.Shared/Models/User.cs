@@ -12,5 +12,7 @@ namespace BankAccounts.Shared.Models
         public DateTime DateOfBirth { get; set; }
         public Gender Gender { get; set; }
         public string BillingAddress { get; set; }
+
+        public IEnumerable<Account> Accounts { get; set; } = new List<Account>();
     }
 }

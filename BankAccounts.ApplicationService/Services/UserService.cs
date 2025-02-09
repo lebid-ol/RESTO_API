@@ -9,7 +9,7 @@ namespace BankAccounts.Services
     {
         User AddUser(User userRequest);
         User? GetUser(int id);
-        List<User> GetUsers();
+        IEnumerable<User> GetUsers();
         User UpdateUser(UpdateUser requets);
         void DeleteUser(int id);
 
@@ -65,7 +65,7 @@ namespace BankAccounts.Services
 
         }
 
-        public List<User> GetUsers()
+        public IEnumerable<User> GetUsers()
         {
             var findAllUser = _usersRepository.GetAllUsersFromData();
 

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BankAccounts.ResponseModels;
 using static BankAccounts.Shared.Models.GenderType;
 
 namespace BankAccounts.Shared.Models.Responses
@@ -16,5 +17,6 @@ namespace BankAccounts.Shared.Models.Responses
         public DateTime DateOfBirth { get; set; } 
         public Gender Gender { get; set; } 
         public string BillingAddress { get; set; }
+        public IEnumerable<AccountResponse> Accounts { get; set; } = new List<AccountResponse>();
     }
 }

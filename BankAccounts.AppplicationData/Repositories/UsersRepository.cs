@@ -6,6 +6,7 @@ using BankAccounts.AppplicationData.Records;
 using System.Runtime.ConstrainedExecution;
 using static BankAccounts.Shared.Models.GenderType;
 using BankAccounts.Shared.Models;
+using BankAccounts.Repositories;
 
 namespace BankAccounts.AppplicationData.Repositories
 {
@@ -13,7 +14,7 @@ namespace BankAccounts.AppplicationData.Repositories
     {
         User AddUserRecord(User users);
         User GetOneUserFromData(int userId);
-        List<User> GetAllUsersFromData();
+        IEnumerable<User> GetAllUsersFromData();
         User UpdateUserRecord(UpdateUser user);
         void DeleteUserFromData(int userId);
     }
@@ -22,6 +23,13 @@ namespace BankAccounts.AppplicationData.Repositories
     {
         private const string TABLE_NAME = "users.csv";
         private const string USER_ID_TRACKER = "userId.txt";
+
+        private readonly IAccountRepository _accountRepository;
+
+        public UsersRepository(IAccountRepository accountRepository)
+        {
+            _accountRepository = accountRepository;
+        }
 
         public User AddUserRecord(User user)
         {
@@ -97,7 +105,11 @@ namespace BankAccounts.AppplicationData.Repositories
 
                         };
 
+                        var account = _accountRepository.GetByOwnerId(userId);
+
+                        user.Accounts = new List<Account>() { account };    
                         return user;
+
                     }
                     else
                     {
@@ -112,7 +124,7 @@ namespace BankAccounts.AppplicationData.Repositories
         }
 
 
-        public List<User> GetAllUsersFromData()
+        public IEnumerable<User> GetAllUsersFromData()
         {
             if (!File.Exists(TABLE_NAME))
             {

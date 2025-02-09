@@ -14,6 +14,7 @@ namespace BankAccounts.Repositories
         List<Account> GetAllAccountsFromData();
         Account UpdateAccountRecord(UpdateAccount account);
         void DeleteAccountFromData(int accountId);
+        Account GetByOwnerId(int ownerId);
     }
 
     public class AccountsRepository : IAccountRepository
@@ -270,6 +271,47 @@ namespace BankAccounts.Repositories
                 return nextId;
             }
 
+        }
+
+        public Account GetByOwnerId(int ownerId)
+        {
+            if (!File.Exists(TABLE_NAME))
+            {
+                throw new DontExistException("Account table do not exist");
+            }
+
+            using (var reader = new StreamReader(TABLE_NAME))
+            using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+            {
+                var records = csv.GetRecords<AccountEntity>().ToList();
+
+                if (records.Any())
+                {
+                    var record = records.FirstOrDefault(x => x.OwnerUserId == ownerId);
+                    if (record != null)
+                    {
+                        var account = new Account()
+                        {
+                            Id = record.Id,
+                            AccountName = record.AccountName,
+                            AccountType = record.AccountType,
+                            Balance = record.Balance,
+                            CreatedDate = record.CreatedDate,
+                            OwnerUserId = record.OwnerUserId,
+                        };
+
+                        return account;
+                    }
+                    else
+                    {
+                        throw new NotFoundException("No account records found");
+                    }
+                }
+                else
+                {
+                    throw new NotFoundException("No account records found");
+                }
+            }
         }
     }
 
