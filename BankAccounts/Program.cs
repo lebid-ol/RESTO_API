@@ -1,9 +1,19 @@
+using BankAccounts.API.DI_test;
+using BankAccounts.AppplicationData.Repositories;
+using BankAccounts.Repositories;
+using BankAccounts.Services;
 using Microsoft.OpenApi.Models;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+
+builder.Services.AddScoped<IAccountRepository, AccountsRepository>();
+builder.Services.AddScoped<IAccountService, AccountService>();
+builder.Services.AddScoped<IUserRepositoy, UsersRepository>();
+builder.Services.AddScoped<IUserService, UserService>();
+
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

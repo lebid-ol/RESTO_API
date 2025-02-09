@@ -3,7 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.12.35521.163
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BankAccounts", "BankAccounts\BankAccounts.csproj", "{279D20E9-1E4B-4952-AC04-152D864378BE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BankAccounts.API", "BankAccounts\BankAccounts.API.csproj", "{279D20E9-1E4B-4952-AC04-152D864378BE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BankAccounts.ApplicationService", "BankAccounts.ApplicationService\BankAccounts.ApplicationService.csproj", "{56ECD627-1FE4-4BE1-84D8-0EF136359001}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BankAccounts.AppplicationData", "BankAccounts.AppplicationData\BankAccounts.AppplicationData.csproj", "{D8D1F004-0599-4997-BFFF-7E3AC1055701}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BankAccounts.Shared", "BankAccounts.Shared\BankAccounts.Shared.csproj", "{A4990353-EC22-4FB8-8B62-12C167D81A20}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +21,18 @@ Global
 		{279D20E9-1E4B-4952-AC04-152D864378BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{279D20E9-1E4B-4952-AC04-152D864378BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{279D20E9-1E4B-4952-AC04-152D864378BE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{56ECD627-1FE4-4BE1-84D8-0EF136359001}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{56ECD627-1FE4-4BE1-84D8-0EF136359001}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{56ECD627-1FE4-4BE1-84D8-0EF136359001}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{56ECD627-1FE4-4BE1-84D8-0EF136359001}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D8D1F004-0599-4997-BFFF-7E3AC1055701}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D8D1F004-0599-4997-BFFF-7E3AC1055701}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D8D1F004-0599-4997-BFFF-7E3AC1055701}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D8D1F004-0599-4997-BFFF-7E3AC1055701}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A4990353-EC22-4FB8-8B62-12C167D81A20}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A4990353-EC22-4FB8-8B62-12C167D81A20}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A4990353-EC22-4FB8-8B62-12C167D81A20}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A4990353-EC22-4FB8-8B62-12C167D81A20}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

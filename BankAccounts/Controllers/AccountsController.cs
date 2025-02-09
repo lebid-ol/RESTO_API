@@ -1,9 +1,14 @@
-﻿using BankAccounts.Repositories;
+﻿using BankAccounts.API.DI_test;
+using BankAccounts.Exceptions;
+using BankAccounts.Records;
 using BankAccounts.RequestModel;
 using BankAccounts.ResponseModels;
 using BankAccounts.Services;
+using BankAccounts.Shared.Models;
+using BankAccounts.Shared.Models.Request;
+using CsvHelper;
 using Microsoft.AspNetCore.Mvc;
-
+using Microsoft.Extensions.Logging;
 
 namespace BankAccounts.Controllers
 {
@@ -11,69 +16,149 @@ namespace BankAccounts.Controllers
     [ApiController]
     public class AccountsController : ControllerBase
     {
-        // GET: api/<AccountsController>
-        [HttpGet]
-        public ActionResult<string> GetAllAccounts()
+        private readonly IAccountService _accountService;
+
+        public AccountsController(IAccountService accountService)
         {
-            var allAccounts = AccountService.GetAccounts();
-
-            if (allAccounts == null)
-            {
-                return NotFound(new { message = "Accounts not found in Database." });
-            }
-
-            return Ok(allAccounts);
+             _accountService = accountService;
         }
 
-        [HttpGet("query/{id}")]
-        public string GetAllAccountsQuery(
-            [FromRoute] int id,
-            [FromQuery] int[] aId)
+        // GET: api/<AccountsController>
+        [HttpGet]
+        public ActionResult<List<AccountResponse>> GetAllAccounts()
         {
-            if (aId.Length == 0)
+            try
             {
-                return "Missing any aIDS";
+                var allAccounts = _accountService.GetAccounts();
+
+                return Ok(allAccounts);
+
             }
-
-            return $"";
-
+            catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (DontExistException ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
 
         // GET api/<AccountsController>/5
         [HttpGet("{id}")]
-        public ActionResult<string> GetAccountById([FromRoute] int id)
+        public ActionResult<AccountResponse> GetAccountById([FromRoute] int id)
         {
-            var account = AccountService.GetAccount(id);
-
-            if (account == null)
+            try
             {
-                return NotFound(new { message = "Account not found." });
-            }
 
-            return Ok(account);
+                var account = _accountService.GetAccount(id);
+
+                return Ok(account);
+            }
+            catch (NotFoundException ex)
+            {
+    
+                return NotFound(ex.Message);
+            }
+            catch (DontExistException ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
 
         // POST api/<AccountsController>
         [HttpPost]
-        public ActionResult CreateAccount([FromBody] AccountRequest request)
+        public ActionResult<AccountResponse> CreateAccount([FromBody] AccountRequest request)
         {
-            AccountService.AddAccount(request);
-            return Ok();
+            try
+            {
+                var newAccount = new Account()
+                {
+                    AccountName = request.AccountName,
+                    AccountType = request.AccountType,
+                    OwnerUserId = request.OwnerUserId,
+                };
+
+                var createdAccount = _accountService.AddAccount(newAccount);
+
+                var response = new AccountResponse()
+                {
+                    AccountName = createdAccount.AccountName,
+                    Id = createdAccount.Id,
+                    AccountType = createdAccount.AccountType,
+                    Balance = createdAccount.Balance,
+                };
+
+                return Ok(response);
+            }
+            catch (Exception ex) 
+            {
+                return StatusCode(500, ex.Message); 
+            }
         }
 
         // PUT api/<AccountsController>/5
         [HttpPut("{id}")]
-        public string UpdateAccountById([FromRoute] int id, [FromBody] string name)
+        public ActionResult<AccountResponse> UpdateAccountById([FromRoute] int id, [FromBody] UpdateAccountRequets updateRequest)
         {
-            throw new Exception();
-            return $"Account {id} updated to new name {name}";
+            try
+            {
+                var upodateAccount = new UpdateAccount()
+                {
+                    Id = id,
+                    AccountName = updateRequest.AccountName,
+                };
+
+                var updatedAccount = _accountService.UpdateAccount(upodateAccount);
+
+                return Accepted(updatedAccount);
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (DontExistException ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
 
         // DELETE api/<AccountsController>/5
         [HttpDelete("{id}")]
-        public string DeleteAccountById(int id)
+        public ActionResult<string> DeleteAccountById([FromRoute] int id)
         {
-            return $"Account with ID {id} was deleted";
+            try
+            {
+                _accountService.DeleteAccount(id);
+
+                return NoContent();
+
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (DontExistException ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
         }
+
     }
 }
