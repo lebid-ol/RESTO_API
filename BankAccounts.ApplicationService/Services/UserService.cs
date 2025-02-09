@@ -27,7 +27,6 @@ namespace BankAccounts.Services
 
         public User AddUser(User user)
         {
-
             var createdUser = _usersRepository.AddUserRecord(user);
 
              return createdUser;

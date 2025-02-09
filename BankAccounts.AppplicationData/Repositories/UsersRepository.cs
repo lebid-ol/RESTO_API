@@ -21,6 +21,7 @@ namespace BankAccounts.AppplicationData.Repositories
     public class UsersRepository : IUserRepository
     {
         private const string TABLE_NAME = "users.csv";
+        private const string USER_ID_TRACKER = "userId.txt";
 
         public User AddUserRecord(User user)
         {
@@ -261,18 +262,18 @@ namespace BankAccounts.AppplicationData.Repositories
 
         private int GetNextUserID()
         {
-            if (!File.Exists("userId.txt"))
+            if (!File.Exists(USER_ID_TRACKER))
             {
-                File.WriteAllText("userId.txt", "1");
+                File.WriteAllText(USER_ID_TRACKER, "1");
                 return 1;
             }
 
             else
             {
-                var id = File.ReadAllText("usertId.txt");
+                var id = File.ReadAllText(USER_ID_TRACKER);
                 var intId = int.Parse(id);
                 var nextId = intId + 1;
-                File.WriteAllText("userId.txt", nextId.ToString());
+                File.WriteAllText(USER_ID_TRACKER, nextId.ToString());
                 return nextId;
             }
         }

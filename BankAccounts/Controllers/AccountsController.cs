@@ -20,7 +20,7 @@ namespace BankAccounts.Controllers
 
         public AccountsController(IAccountService accountService)
         {
-             _accountService = accountService;
+            _accountService = accountService;
         }
 
         // GET: api/<AccountsController>
