@@ -4,25 +4,42 @@ using CsvHelper;
 using System.Globalization;
 using BankAccounts.AppplicationData.Records;
 using System.Runtime.ConstrainedExecution;
+using static BankAccounts.Shared.Models.GenderType;
+using BankAccounts.Shared.Models;
 
 namespace BankAccounts.AppplicationData.Repositories
 {
-    public interface IUserRepositoy
+    public interface IUserRepository
     {
-        void AddUserRecord(List<UserEntity> users);
-        UserEntity GetOneUserFromData(int userId);
-        List<UserEntity> GetAllUsersFromData();
-        UserEntity UpdateUserRecord(UserEntity user);
+        User AddUserRecord(User users);
+        User GetOneUserFromData(int userId);
+        List<User> GetAllUsersFromData();
+        User UpdateUserRecord(UpdateUser user);
         void DeleteUserFromData(int userId);
-        UserEntity GetUserByName(string name);
     }
 
-   public class UsersRepository : IUserRepositoy
+    public class UsersRepository : IUserRepository
     {
         private const string TABLE_NAME = "users.csv";
 
-        public void AddUserRecord(List<UserEntity> users)
+        public User AddUserRecord(User user)
         {
+            var nextId = GetNextUserID();
+
+            var userEntity = new UserEntity
+            {
+                UserId = nextId,
+                UserName = user.UserName,
+                Email = user.Email,
+                UserLastName = user.UserLastName,
+                PhoneNumber = user.PhoneNumber,
+                DateOfBirth = user.DateOfBirth,
+                BillingAddress = user.BillingAddress,
+
+            };
+
+            var users = new List<UserEntity>() { userEntity };
+
             if (!File.Exists(TABLE_NAME))
             {
                 using var writer = new StreamWriter(TABLE_NAME);
@@ -35,7 +52,7 @@ namespace BankAccounts.AppplicationData.Repositories
             {
                 var config = new CsvConfiguration(CultureInfo.InvariantCulture)
                 {
-                     HasHeaderRecord = false,
+                    HasHeaderRecord = false,
                 };
 
                 using (var stream = File.Open(TABLE_NAME, FileMode.Append))
@@ -45,11 +62,13 @@ namespace BankAccounts.AppplicationData.Repositories
                     csv.WriteRecords(users);
                 }
             }
+            user.UserId = nextId;
+            return user;
 
 
         }
 
-        public UserEntity GetOneUserFromData(int userId)
+        public User GetOneUserFromData(int userId)
         {
             if (!File.Exists(TABLE_NAME))
             {
@@ -63,10 +82,22 @@ namespace BankAccounts.AppplicationData.Repositories
 
                 if (records.Any())
                 {
-                    var record = records.FirstOrDefault(x => x.Id == userId);
+                    var record = records.FirstOrDefault(x => x.UserId == userId);
                     if (record != null)
                     {
-                        return record;
+                        var user = new User()
+                        {
+                            UserId = record.UserId,
+                            UserName = record.UserName,
+                            Email = record.Email,
+                            UserLastName = record.UserLastName,
+                            PhoneNumber = record.PhoneNumber,
+                            DateOfBirth = record.DateOfBirth,
+                            BillingAddress = record.BillingAddress,
+
+                        };
+
+                        return user;
                     }
                     else
                     {
@@ -81,7 +112,7 @@ namespace BankAccounts.AppplicationData.Repositories
         }
 
 
-        public List<UserEntity> GetAllUsersFromData()
+        public List<User> GetAllUsersFromData()
         {
             if (!File.Exists(TABLE_NAME))
             {
@@ -95,7 +126,27 @@ namespace BankAccounts.AppplicationData.Repositories
 
                 if (results.Any())
                 {
-                    return results;
+                    var userList = new List<User>();
+
+                    foreach (var record in results)
+                    {
+                        var user = new User()
+                        {
+                            UserId = record.UserId,
+                            UserName = record.UserName,
+                            Email = record.Email,
+                            UserLastName = record.UserLastName,
+                            PhoneNumber = record.PhoneNumber,
+                            DateOfBirth = record.DateOfBirth,
+                            BillingAddress = record.BillingAddress,
+                            Gender = record.Gender
+
+                        };
+
+                        userList.Add(user);
+
+                    }
+                    return userList;
                 }
                 else
                 {
@@ -104,7 +155,7 @@ namespace BankAccounts.AppplicationData.Repositories
             }
         }
 
-        public UserEntity UpdateUserRecord(UserEntity user)
+        public User UpdateUserRecord(UpdateUser user)
         {
             if (!File.Exists(TABLE_NAME))
             {
@@ -121,7 +172,7 @@ namespace BankAccounts.AppplicationData.Repositories
 
             if (results.Any())
             {
-                var record = results.FirstOrDefault(x => x.Id == user.Id);
+                var record = results.FirstOrDefault(x => x.UserId == user.UserId);
 
                 if (record != null)
                 {
@@ -130,11 +181,10 @@ namespace BankAccounts.AppplicationData.Repositories
                     record.UserName = user.UserName;
                     record.UserLastName = user.UserLastName;
                     record.DateOfBirth = user.DateOfBirth;
-                    record.Gender = user.Gender;
                     record.BillingAddress = user.BillingAddress;
 
 
-                    var index = results.FindIndex(x => x.Id == user.Id);
+                    var index = results.FindIndex(x => x.UserId == user.UserId);
 
                     results[index] = record;
 
@@ -142,7 +192,20 @@ namespace BankAccounts.AppplicationData.Repositories
                     using var csvWriter = new CsvWriter(writer, CultureInfo.InvariantCulture);
                     {
                         csvWriter.WriteRecords(results);
-                        return record;
+
+                        var updateUser = new User()
+                        {
+                            UserId = record.UserId,
+                            UserName = record.UserName,
+                            Email = record.Email,
+                            UserLastName = record.UserLastName,
+                            PhoneNumber = record.PhoneNumber,
+                            DateOfBirth = record.DateOfBirth,
+                            BillingAddress = record.BillingAddress,
+                            Gender = record.Gender
+                        };
+
+                        return updateUser;
                     }
                 }
                 else
@@ -173,7 +236,7 @@ namespace BankAccounts.AppplicationData.Repositories
 
             if (records.Any())
             {
-                var index = records.FindIndex(x => x.Id == userId);
+                var index = records.FindIndex(x => x.UserId == userId);
                 if (index != -1)
                 {
                     records.RemoveAt(index);
@@ -197,36 +260,24 @@ namespace BankAccounts.AppplicationData.Repositories
         }
 
 
-        public UserEntity GetUserByName(string name)
+        private int GetNextUserID()
         {
-            if (!File.Exists(TABLE_NAME))
+            if (!File.Exists("userId.txt"))
             {
-                throw new DontExistException("User table do not exist");
+                File.WriteAllText("userId.txt", "1");
+                return 1;
             }
 
-            using (var reader = new StreamReader(TABLE_NAME))
-            using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+            else
             {
-                var records = csv.GetRecords<UserEntity>().ToList();
-
-                if (records.Any())
-                {
-                    var record = records.FirstOrDefault(x => x.UserName == name);
-                    if (record != null)
-                    {
-                        return record;
-                    }
-                    else
-                    {
-                        throw new NotFoundException("No user records found");
-                    }
-                }
-                else
-                {
-                    throw new NotFoundException("No user records found");
-                }
+                var id = File.ReadAllText("usertId.txt");
+                var intId = int.Parse(id);
+                var nextId = intId + 1;
+                File.WriteAllText("userId.txt", nextId.ToString());
+                return nextId;
             }
         }
     }
 }
+
 
