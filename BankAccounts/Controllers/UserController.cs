@@ -1,8 +1,12 @@
 ﻿using BankAccounts.AppplicationData.Records;
 using BankAccounts.Exceptions;
+using BankAccounts.ResponseModels;
 using BankAccounts.Services;
+using BankAccounts.Shared.Models;
 using BankAccounts.Shared.Models.Requests;
+using BankAccounts.Shared.Models.Responses;
 using Microsoft.AspNetCore.Mvc;
+using static BankAccounts.Shared.Models.GenderType;
 
 namespace BankAccounts.API.Controllers
 {
@@ -19,7 +23,7 @@ namespace BankAccounts.API.Controllers
 
         //GET: api/<UserController>
         [HttpGet]
-        public ActionResult<List<UserEntity>> GetAllUsers()
+        public ActionResult<List<UserResponse>> GetAllUsers()
         {
             try
             {
@@ -42,24 +46,9 @@ namespace BankAccounts.API.Controllers
             }
         }
 
-        [HttpGet("query")]
-        public ActionResult<UserEntity> GetAllUsersQuery([FromQuery] string name)
-        {
-            if (string.IsNullOrEmpty(name))
-            {
-
-                return BadRequest("Missing name");
-
-            }
-               var user = _userService.GetUserByName(name);
-
-            return Ok(user);
-
-        }
-
         // GET api/<UsersController>/5
         [HttpGet("{id}")]
-        public ActionResult<UserEntity> GetUserById([FromRoute] int id)
+        public ActionResult<UserResponse> GetUserById([FromRoute] int id)
         {
             try
             {
@@ -81,16 +70,41 @@ namespace BankAccounts.API.Controllers
             }
         }
 
-        // POST api/<AccountsController>
+        // POST api/<UserssController>
         [HttpPost]
-        public ActionResult<UserEntity> CreateUser([FromBody] UserRequest request)
+        public ActionResult<UserResponse> CreateUser([FromBody] UserRequest request)
         {
-            try
+           try
             {
-                var user = _userService.AddUser(new Shared.Models.User());
+                var newUser = new User()
+                {
+                    UserName = request.UserName,
+                    Gender = request.Gender,
+                    Email = request.Email,
+                    UserLastName = request.UserLastName, 
+                    PhoneNumber = request.PhoneNumber,
+                    DateOfBirth = request.DateOfBirth,
+                    BillingAddress = request.BillingAddress 
+                };
 
-                return Ok(user);
+                var createdUser = _userService.AddUser(newUser);
+
+                var response = new UserResponse()
+                {
+                    UserName = createdUser.UserName,
+                    Gender = createdUser.Gender,
+                    Email = createdUser.Email,
+                    UserLastName = createdUser.UserLastName,
+                    PhoneNumber = createdUser.PhoneNumber,
+                    DateOfBirth = createdUser.DateOfBirth,
+                    BillingAddress = createdUser.BillingAddress
+                };
+
+                return Ok(response);
             }
+
+
+
             catch (Exception ex)
             {
                 return StatusCode(500, ex.Message);
@@ -99,11 +113,23 @@ namespace BankAccounts.API.Controllers
 
         // PUT api/<UsersController>/5
         [HttpPut("{id}")]
-        public ActionResult UpdateUserById([FromRoute] int id, [FromBody] UpdateUserRequest updateRequest)
+        public ActionResult UpdateUserById([FromRoute] int userId, [FromBody] UpdateUserRequest updateRequest)
         {
             try
             {
-                var updatedUser = _userService.UpdateUser(id, new Shared.Models.UserUpdate());
+                var updateUser = new UpdateUser()
+                {
+                    UserId = userId,
+                    UserName = updateRequest.UserName,
+                    Email = updateRequest.Email,
+                    UserLastName = updateRequest.UserLastName,
+                    PhoneNumber = updateRequest.PhoneNumber,
+                    DateOfBirth = updateRequest.DateOfBirth,
+                    BillingAddress = updateRequest.BillingAddress
+
+                };
+
+                var updatedUser = _userService.UpdateUser(updateUser);
 
                 return Accepted(updatedUser);
             }

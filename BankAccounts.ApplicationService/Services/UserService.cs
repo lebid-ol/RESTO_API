@@ -7,51 +7,32 @@ namespace BankAccounts.Services
 {
     public interface IUserService
     {
-        UserEntity AddUser(User userRequest);
-        UserEntity? GetUser(int id);
-        List<User> GetUsers();
-        UserEntity UpdateUser(int id, UserUpdate requets);
+        User AddUser(User userRequest);
+        User? GetUser(int id);
+        IEnumerable<User> GetUsers();
+        User UpdateUser(UpdateUser requets);
         void DeleteUser(int id);
-        AccountEntity GetUserByName(string name);
 
     }
 
     public class UserService : IUserService
     {
-        private readonly IUserRepositoy _usersRepository;
+        private readonly IUserRepository _usersRepository;
 
-        public UserService(IUserRepositoy usersRepository)
+        public UserService(IUserRepository usersRepository)
         {
             _usersRepository = usersRepository;
 
         }
 
-        public UserEntity AddUser(User userRequest)
+        public User AddUser(User user)
         {
+            var createdUser = _usersRepository.AddUserRecord(user);
 
-            var user = new UserEntity()
-            {
-                //Email = userRequest.Email,
-                //UserName = userRequest.UserName,
-                //Id = GetNextUserID(),
-                //UserLastName = userRequest.UserLastName,
-                //PhoneNumber = userRequest.PhoneNumber,
-                //DateOfBirth = userRequest.DateOfBirth,
-                //Gender = userRequest.Gender,
-                //BillingAddress = userRequest.BillingAddress
-            };
-
-            var users = new List<UserEntity>()
-            {
-                user
-            };
-
-            _usersRepository.AddUserRecord(users);
-
-            return user;
+             return createdUser;
         }
 
-        private int GetNextUserID()
+        public int GetNextUserID()
         {
             if (!File.Exists("userId.txt"))
             {
@@ -70,7 +51,7 @@ namespace BankAccounts.Services
 
         }
 
-        public UserEntity? GetUser(int id)
+        public User? GetUser(int id)
         {
 
             var findUser = _usersRepository.GetOneUserFromData(id);
@@ -84,7 +65,7 @@ namespace BankAccounts.Services
 
         }
 
-        public List<UserEntity> GetUsers()
+        public IEnumerable<User> GetUsers()
         {
             var findAllUser = _usersRepository.GetAllUsersFromData();
 
@@ -92,10 +73,10 @@ namespace BankAccounts.Services
 
         }
 
-        public UserEntity UpdateUser(int id, UserUpdate requests)
+         public User UpdateUser(UpdateUser updatedUser)
         {
-            var updatedUser = new UserEntity()
-            {
+           // var updatedUser = new UserEntity()
+            //{
                 //Id = id,
                 //Email = requests.Email,
                 //UserName = requests.UserName,
@@ -105,34 +86,16 @@ namespace BankAccounts.Services
                 //Gender = requests.Gender,
                 //BillingAddress = requests.BillingAddress
 
-            };
+           // };
 
-
-            return _usersRepository.UpdateUserRecord(updatedUser);
+            var user = _usersRepository.UpdateUserRecord(updatedUser);
+            return user;
         }
 
         public void DeleteUser(int id)
         {
             _usersRepository.DeleteUserFromData(id);
-        }
-
-        public UserEntity GetUserByName(string name)
-        {
-            return _usersRepository.GetUserByName(name);
-        }
-
-        List<User> IUserService.GetUsers()
-        {
-            throw new NotImplementedException();
-        }
-
-        AccountEntity IUserService.GetUserByName(string name)
-        {
-            throw new NotImplementedException();
-        }
-
-
-       
+        } 
 
       
     }
