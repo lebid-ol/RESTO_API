@@ -106,7 +106,7 @@ namespace BankAccounts.AppplicationData.Repositories
                         };
 
                         var account = _accountRepository.GetAllAccountsByOwnerID(userId);
-                        user.Accounts = new List<Account>() { account };
+                        user.Accounts = account;
 
                         return user;
 

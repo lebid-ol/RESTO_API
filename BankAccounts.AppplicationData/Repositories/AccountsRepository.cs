@@ -15,7 +15,7 @@ namespace BankAccounts.Repositories
         Account UpdateAccountRecord(UpdateAccount account);
         void DeleteAccountFromData(int accountId);
         Account GetByOwnerId(int ownerId);
-        Account GetAllAccountsByOwnerID(int ownerId);
+        List <Account> GetAllAccountsByOwnerID(int ownerId);
     }
 
     public class AccountsRepository : IAccountRepository
@@ -355,11 +355,6 @@ namespace BankAccounts.Repositories
                     throw new NotFoundException("No account records found");
                 }
             }
-        }
-
-        Account IAccountRepository.GetAllAccountsByOwnerID(int ownerId)
-        {
-            throw new NotImplementedException();
         }
     }
 
