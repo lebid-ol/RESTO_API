@@ -1,0 +1,6 @@
+UserId,UserName,Email,UserLastName,PhoneNumber,DateOfBirth,Gender,BillingAddress
+1,NewUser,33333444444,NewLastName,1234567890,01/01/2024 00:00:00,Man,Kyiv
+2,NewUser,33333444444,NewLastName,1234567890,01/01/2024 00:00:00,Man,Kyiv
+3,NewUser,33333444444,NewLastName,1234567890,01/01/2024 00:00:00,Man,Kyiv
+4,NewUser,33333444444,NewLastName,1234567890,01/01/2024 00:00:00,Man,Kyiv
+5,NewUser,33333444444,NewLastName,1234567890,01/01/2024 00:00:00,Man,Kyiv
