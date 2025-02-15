@@ -21,11 +21,6 @@ namespace BankAccounts.Repositories
         private const string TABLE_NAME = "accounts.csv";
 
 
-        public AccountsRepository()
-        {
-            Console.WriteLine("Init");
-        }
-
         public Account AddAcountRecord(Account account)
         {
             var nextId = GetNextAccountID();
