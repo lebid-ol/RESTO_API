@@ -43,9 +43,9 @@ namespace BankAccounts.Repositories
                 CreatedDate = account.CreatedDate,
                 Balance = account.Balance,
                 OwnerUserId = account.OwnerUserId,
-                Id = nextId,
             };
-            mongoContext.ac
+
+
             mongoContext.Accounts.InsertOne(accountEntity);
 
             // CSV: TODO: REMOVE
@@ -78,50 +78,51 @@ namespace BankAccounts.Repositories
                 }
             }
 
-            account.Id = nextId;
+            account.Id = accountEntity.Id;
             return account;
 
         }
 
         public Account GetOneAccountFromData(int accountId)
         {
-            if (!File.Exists(TABLE_NAME))
-            {
-                throw new DontExistException("Account table do not exist");
-            }
+            throw new NotImplementedException();
+            //if (!File.Exists(TABLE_NAME))
+            //{
+            //    throw new DontExistException("Account table do not exist");
+            //}
 
-            using (var reader = new StreamReader(TABLE_NAME))
-            using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
-            {
-                var records = csv.GetRecords<AccountEntity>().ToList();
+            //using (var reader = new StreamReader(TABLE_NAME))
+            //using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+            //{
+            //    var records = csv.GetRecords<AccountEntity>().ToList();
 
-                if (records.Any())
-                {
-                    var record = records.FirstOrDefault(x => x.Id == accountId);
-                    if (record != null)
-                    {
-                        var account = new Account()
-                        {
-                            Id = record.Id,
-                            AccountName = record.AccountName,
-                            AccountType = record.AccountType,
-                            Balance = record.Balance,
-                            CreatedDate = record.CreatedDate,
-                            OwnerUserId = record.OwnerUserId,
-                        };
+            //    if (records.Any())
+            //    {
+            //        var record = records.FirstOrDefault(x => x.Id == accountId);
+            //        if (record != null)
+            //        {
+            //            var account = new Account()
+            //            {
+            //                Id = record.Id,
+            //                AccountName = record.AccountName,
+            //                AccountType = record.AccountType,
+            //                Balance = record.Balance,
+            //                CreatedDate = record.CreatedDate,
+            //                OwnerUserId = record.OwnerUserId,
+            //            };
 
-                        return account;
-                    }
-                    else
-                    {
-                        throw new NotFoundException("No account records found");
-                    }
-                }
-                else
-                {
-                    throw new NotFoundException("No account records found");
-                }
-            }
+            //            return account;
+            //        }
+            //        else
+            //        {
+            //            throw new NotFoundException("No account records found");
+            //        }
+            //    }
+            //    else
+            //    {
+            //        throw new NotFoundException("No account records found");
+            //    }
+            //}
         }
 
         public List<Account> GetAllAccountsFromData()
@@ -166,101 +167,103 @@ namespace BankAccounts.Repositories
 
         public Account UpdateAccountRecord(UpdateAccount account)
         {
-            if (!File.Exists(TABLE_NAME))
-            {
-                throw new DontExistException("Account table do not exist");
-            }
+            throw new NotImplementedException();
+            //if (!File.Exists(TABLE_NAME))
+            //{
+            //    throw new DontExistException("Account table do not exist");
+            //}
 
-            var results = new List<AccountEntity>();
+            //var results = new List<AccountEntity>();
 
-            // получить все данные
-            using (var reader = new StreamReader(TABLE_NAME))
-            using (var csvReader = new CsvReader(reader, CultureInfo.InvariantCulture))
-            {
-                results = csvReader.GetRecords<AccountEntity>().ToList();
-            }
+            //// получить все данные
+            //using (var reader = new StreamReader(TABLE_NAME))
+            //using (var csvReader = new CsvReader(reader, CultureInfo.InvariantCulture))
+            //{
+            //    results = csvReader.GetRecords<AccountEntity>().ToList();
+            //}
 
-            if (results.Any())
-            {
-                var record = results.FirstOrDefault(x => x.Id == account.Id);
+            //if (results.Any())
+            //{
+            //    var record = results.FirstOrDefault(x => x.Id == account.Id);
 
-                if (record != null)
-                {
-                    record.AccountName = account.AccountName;
-                    record.UpdateDate = account.UpdateDate;
+            //    if (record != null)
+            //    {
+            //        record.AccountName = account.AccountName;
+            //        record.UpdateDate = account.UpdateDate;
 
-                    var index = results.FindIndex(x => x.Id == account.Id);
+            //        var index = results.FindIndex(x => x.Id == account.Id);
 
-                    results[index] = record;
+            //        results[index] = record;
 
-                    using var writer = new StreamWriter(TABLE_NAME);
-                    using var csvWriter = new CsvWriter(writer, CultureInfo.InvariantCulture);
-                    {
-                        csvWriter.WriteRecords(results);
+            //        using var writer = new StreamWriter(TABLE_NAME);
+            //        using var csvWriter = new CsvWriter(writer, CultureInfo.InvariantCulture);
+            //        {
+            //            csvWriter.WriteRecords(results);
 
-                        var updatedAccount = new Account()
-                        {
-                            Id = record.Id,
-                            AccountName = record.AccountName,
-                            AccountType = record.AccountType,
-                            Balance = record.Balance,
-                            CreatedDate = record.CreatedDate,
-                            OwnerUserId = record.OwnerUserId,
-                            UpdateDate  = record.UpdateDate
-                        };
+            //            var updatedAccount = new Account()
+            //            {
+            //                Id = record.Id,
+            //                AccountName = record.AccountName,
+            //                AccountType = record.AccountType,
+            //                Balance = record.Balance,
+            //                CreatedDate = record.CreatedDate,
+            //                OwnerUserId = record.OwnerUserId,
+            //                UpdateDate  = record.UpdateDate
+            //            };
 
-                        return updatedAccount;
-                    }
-                }
-                else
-                {
-                    throw new NotFoundException("No account records found");
-                }
-            }
-            else
-            {
-                throw new NotFoundException("No account records found");
-            }
+            //            return updatedAccount;
+            //        }
+            //    }
+            //    else
+            //    {
+            //        throw new NotFoundException("No account records found");
+            //    }
+            //}
+            //else
+            //{
+            //    throw new NotFoundException("No account records found");
+            //}
         }
 
         public void DeleteAccountFromData(int accountId)
         {
-            if (!File.Exists(TABLE_NAME))
-            {
-                throw new DontExistException("Account table do not exist");
-            }
+            throw new NotImplementedException();
+            //if (!File.Exists(TABLE_NAME))
+            //{
+            //    throw new DontExistException("Account table do not exist");
+            //}
 
-            var records = new List<AccountEntity>();
+            //var records = new List<AccountEntity>();
 
-            using (var reader = new StreamReader(TABLE_NAME))
-            using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
-            {
-                records = csv.GetRecords<AccountEntity>().ToList();
-            }
+            //using (var reader = new StreamReader(TABLE_NAME))
+            //using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+            //{
+            //    records = csv.GetRecords<AccountEntity>().ToList();
+            //}
 
-            if (records.Any())
-                {
-                    var index = records.FindIndex(x => x.Id == accountId);
-                    if (index != -1)
-                    {
-                        records.RemoveAt(index);
+            //if (records.Any())
+            //    {
+            //        var index = records.FindIndex(x => x.Id == accountId);
+            //        if (index != -1)
+            //        {
+            //            records.RemoveAt(index);
 
-                        using (var writer = new StreamWriter(TABLE_NAME))
-                        using (var csvToUpdate = new CsvWriter(writer, CultureInfo.InvariantCulture))
-                        {
-                            csvToUpdate.WriteRecords(records);
-                        }
+            //            using (var writer = new StreamWriter(TABLE_NAME))
+            //            using (var csvToUpdate = new CsvWriter(writer, CultureInfo.InvariantCulture))
+            //            {
+            //                csvToUpdate.WriteRecords(records);
+            //            }
 
-                    }
-                    else
-                    {
-                        throw new NotFoundException("No account records found");
-                    }
-                }
-            else
-                {
-                    throw new NotFoundException("No account records found");
-                }
+            //        }
+            //        else
+            //        {
+            //            throw new NotFoundException("No account records found");
+            //        }
+            //    }
+            //else
+            //    {
+            //        throw new NotFoundException("No account records found");
+            //    }
         }
 
         private int GetNextAccountID()

@@ -1,10 +1,14 @@
 ﻿using BankAccounts.Shared.Models;
+using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Bson;
 
 namespace BankAccounts.Records
 {
     public class AccountEntity
     {
-        public int Id { get; set; }
+        [BsonId]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string Id { get; set; }
         public int Balance { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime UpdateDate { get; set; }

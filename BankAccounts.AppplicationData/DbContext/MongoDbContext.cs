@@ -21,6 +21,5 @@ namespace BankAccounts.AppplicationData.DbContext
         }
 
         public IMongoCollection<AccountEntity> Accounts => _database.GetCollection<AccountEntity>("accounts");
-        public IMongoCollection<AccountEntity> Accounts2 => _database.GetCollection<AccountEntity>("accounts");
     }
 }
