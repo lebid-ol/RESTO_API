@@ -12,5 +12,6 @@ namespace BankAccounts.AppplicationData.Records
         public DateTime DateOfBirth { get; set; }
         public Gender Gender { get; set; }
         public string BillingAddress { get; set; }
+        public string BillingCity { get; set; } = "New York";
     }
 }

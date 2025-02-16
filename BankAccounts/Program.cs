@@ -1,4 +1,5 @@
 using BankAccounts.API.DI_test;
+using BankAccounts.AppplicationData.DbContext;
 using BankAccounts.AppplicationData.Repositories;
 using BankAccounts.Repositories;
 using BankAccounts.Services;
@@ -13,6 +14,8 @@ builder.Services.AddScoped<IAccountRepository, AccountsRepository>();
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IUserRepository, UsersRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
+
+builder.Services.AddSingleton<MongoDbContext>();
 
 //Add automapper
 //builder.Services.AddAutoMapper(typeof(Program));

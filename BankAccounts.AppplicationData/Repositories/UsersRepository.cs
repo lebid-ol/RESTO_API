@@ -7,6 +7,7 @@ using System.Runtime.ConstrainedExecution;
 using static BankAccounts.Shared.Models.GenderType;
 using BankAccounts.Shared.Models;
 using BankAccounts.Repositories;
+using BankAccounts.AppplicationData.DbContext;
 
 namespace BankAccounts.AppplicationData.Repositories
 {
@@ -25,10 +26,14 @@ namespace BankAccounts.AppplicationData.Repositories
         private const string USER_ID_TRACKER = "userId.txt";
 
         private readonly IAccountRepository _accountRepository;
+        private MongoDbContext mongoContext;
 
-        public UsersRepository(IAccountRepository accountRepository)
+        public UsersRepository(
+            IAccountRepository accountRepository,
+            MongoDbContext context)
         {
             _accountRepository = accountRepository;
+            mongoContext = context;
         }
 
         public User AddUserRecord(User user)

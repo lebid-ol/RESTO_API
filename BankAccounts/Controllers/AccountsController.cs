@@ -1,4 +1,5 @@
 ﻿using BankAccounts.API.DI_test;
+using BankAccounts.AppplicationData.DbContext;
 using BankAccounts.Exceptions;
 using BankAccounts.Records;
 using BankAccounts.RequestModel;
@@ -27,6 +28,7 @@ namespace BankAccounts.Controllers
         [HttpGet]
         public ActionResult<List<AccountResponse>> GetAllAccounts()
         {
+
             try
             {
                 var allAccounts = _accountService.GetAccounts();

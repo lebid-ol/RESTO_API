@@ -1,4 +1,5 @@
-﻿using BankAccounts.Exceptions;
+﻿using BankAccounts.AppplicationData.DbContext;
+using BankAccounts.Exceptions;
 using BankAccounts.Records;
 using BankAccounts.Shared.Models;
 using CsvHelper;
@@ -22,6 +23,14 @@ namespace BankAccounts.Repositories
     {
         private const string TABLE_NAME = "accounts.csv";
 
+        private MongoDbContext mongoContext;
+
+        public AccountsRepository(MongoDbContext context)
+        {
+            mongoContext = context;
+        }
+
+     
 
         public Account AddAcountRecord(Account account)
         {
@@ -36,6 +45,10 @@ namespace BankAccounts.Repositories
                 OwnerUserId = account.OwnerUserId,
                 Id = nextId,
             };
+            mongoContext.ac
+            mongoContext.Accounts.InsertOne(accountEntity);
+
+            // CSV: TODO: REMOVE
 
             var accounts = new List<AccountEntity>() { accountEntity };
 
