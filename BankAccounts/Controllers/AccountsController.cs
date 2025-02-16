@@ -20,7 +20,7 @@ namespace BankAccounts.Controllers
 
         public AccountsController(IAccountService accountService)
         {
-            _accountService = accountService;
+             _accountService = accountService;
         }
 
         // GET: api/<AccountsController>
@@ -111,13 +111,13 @@ namespace BankAccounts.Controllers
         {
             try
             {
-                var upodateAccount = new UpdateAccount()
+                var updateAccount = new UpdateAccount()
                 {
                     Id = id,
                     AccountName = updateRequest.AccountName,
                 };
 
-                var updatedAccount = _accountService.UpdateAccount(upodateAccount);
+                var updatedAccount = _accountService.UpdateAccount(updateAccount);
 
                 return Accepted(updatedAccount);
             }

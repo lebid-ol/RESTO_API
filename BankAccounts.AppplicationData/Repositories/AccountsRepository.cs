@@ -15,17 +15,13 @@ namespace BankAccounts.Repositories
         Account UpdateAccountRecord(UpdateAccount account);
         void DeleteAccountFromData(int accountId);
         Account GetByOwnerId(int ownerId);
+        List <Account> GetAllAccountsByOwnerID(int ownerId);
     }
 
     public class AccountsRepository : IAccountRepository
     {
         private const string TABLE_NAME = "accounts.csv";
 
-
-        public AccountsRepository()
-        {
-            Console.WriteLine("Init");
-        }
 
         public Account AddAcountRecord(Account account)
         {
@@ -301,6 +297,53 @@ namespace BankAccounts.Repositories
                         };
 
                         return account;
+                    }
+                    else
+                    {
+                        throw new NotFoundException("No account records found");
+                    }
+                }
+                else
+                {
+                    throw new NotFoundException("No account records found");
+                }
+            }
+        }
+
+        public List <Account> GetAllAccountsByOwnerID(int ownerId)
+        {
+            if (!File.Exists(TABLE_NAME))
+            {
+                throw new DontExistException("Account table do not exist");
+            }
+
+            using (var reader = new StreamReader(TABLE_NAME))
+            using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+            {
+                var records = csv.GetRecords<AccountEntity>().ToList();
+
+                if (records.Any())
+                {
+                    var accountList = new List<Account>();
+                    var filteredRecords = records.Where(x => x.OwnerUserId == ownerId).ToList();
+                    if (filteredRecords != null)
+                    {
+                        foreach (var record in filteredRecords)
+                        {
+                            var account = new Account()
+                            {
+                                Id = record.Id,
+                                AccountName = record.AccountName,
+                                AccountType = record.AccountType,
+                                Balance = record.Balance,
+                                CreatedDate = record.CreatedDate,
+                                OwnerUserId = record.OwnerUserId,
+                            };
+
+                            accountList.Add(account);
+                        }
+
+                            return accountList;
                     }
                     else
                     {
