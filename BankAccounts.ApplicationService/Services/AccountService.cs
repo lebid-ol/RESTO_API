@@ -7,7 +7,7 @@ namespace BankAccounts.Services
     {
         Account AddAccount(Account accountRequest);
         Account? GetAccount(int id);
-        List<Account> GetAccounts();
+        Task<List<Account>> GetAccounts();
         Account UpdateAccount(UpdateAccount requets);
         void DeleteAccount(int id);
     }
@@ -48,7 +48,7 @@ namespace BankAccounts.Services
 
         }
 
-        public List <Account> GetAccounts()
+        public Task<List <Account>> GetAccounts()
         {
             var findAllAccount = _accountsRepository.GetAllAccountsFromData();
 

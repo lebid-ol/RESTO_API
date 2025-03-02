@@ -1,6 +1,7 @@
 ﻿using BankAccounts.Shared.Models;
 using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Bson;
+using System.Text.Json.Serialization;
 
 namespace BankAccounts.Records
 {
@@ -13,7 +14,11 @@ namespace BankAccounts.Records
         public DateTime CreatedDate { get; set; }
         public DateTime UpdateDate { get; set; }
         public string AccountName { get; set; }
+
+        [JsonConverter(typeof(JsonStringEnumConverter))]
+        [BsonRepresentation(BsonType.String)]
         public AccountType AccountType { get; set; }
+
         public int OwnerUserId { get; set; }
     }
 }

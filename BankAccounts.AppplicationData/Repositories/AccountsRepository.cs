@@ -4,6 +4,8 @@ using BankAccounts.Records;
 using BankAccounts.Shared.Models;
 using CsvHelper;
 using CsvHelper.Configuration;
+using MongoDB.Bson;
+using MongoDB.Driver;
 using System.Globalization;
 
 namespace BankAccounts.Repositories
@@ -12,7 +14,7 @@ namespace BankAccounts.Repositories
     {
         Account AddAcountRecord(Account accounts);
         Account GetOneAccountFromData(int accountId);
-        List<Account> GetAllAccountsFromData();
+        Task<List<Account>> GetAllAccountsFromData();
         Account UpdateAccountRecord(UpdateAccount account);
         void DeleteAccountFromData(int accountId);
         Account GetByOwnerId(int ownerId);
@@ -23,11 +25,11 @@ namespace BankAccounts.Repositories
     {
         private const string TABLE_NAME = "accounts.csv";
 
-        private MongoDbContext mongoContext;
+        private readonly MongoDbContext _mongoContext;
 
         public AccountsRepository(MongoDbContext context)
         {
-            mongoContext = context;
+            _mongoContext = context;
         }
 
      
@@ -46,37 +48,7 @@ namespace BankAccounts.Repositories
             };
 
 
-            mongoContext.Accounts.InsertOne(accountEntity);
-
-            // CSV: TODO: REMOVE
-
-            var accounts = new List<AccountEntity>() { accountEntity };
-
-            if (!File.Exists(TABLE_NAME))
-            {
-                using var writer = new StreamWriter(TABLE_NAME);
-                using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
-                {
-                    csv.WriteRecords(accounts);
-                }
-            }
-            else
-            {
-                // Append to the file.
-                var config = new CsvConfiguration(CultureInfo.InvariantCulture)
-                {
-                    // Don't write the header again.
-                    HasHeaderRecord = false,
-
-                };
-
-                using (var stream = File.Open(TABLE_NAME, FileMode.Append))
-                using (var writer = new StreamWriter(stream))
-                using (var csv = new CsvWriter(writer, config))
-                {
-                    csv.WriteRecords(accounts);
-                }
-            }
+            _mongoContext.Accounts.InsertOne(accountEntity);
 
             account.Id = accountEntity.Id;
             return account;
@@ -125,44 +97,66 @@ namespace BankAccounts.Repositories
             //}
         }
 
-        public List<Account> GetAllAccountsFromData()
+        public async Task<List<Account>> GetAllAccountsFromData()
         {
-            if (!File.Exists(TABLE_NAME))
+            var documents = await _mongoContext.Accounts.Find(new BsonDocument()).ToListAsync();
+
+            var accountList = new List<Account>();
+
+            foreach (var record in documents)
             {
-                throw new DontExistException("Account table do not exist");
+                var account = new Account()
+                {
+                    Id = record.Id,
+                    AccountName = record.AccountName,
+                    AccountType = record.AccountType,
+                    Balance = record.Balance,
+                    CreatedDate = record.CreatedDate,
+                    OwnerUserId = record.OwnerUserId,
+                };
+
+                accountList.Add(account);
             }
 
-            using (var reader = new StreamReader(TABLE_NAME))
-            using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
-            {
-                var results = csv.GetRecords<AccountEntity>().ToList();
+            return accountList;
 
-                if (results.Any())
-                {
-                    var accountList = new List<Account>();
+            //// TODO: Delete after migration
+            //if (!File.Exists(TABLE_NAME))
+            //{
+            //    throw new DontExistException("Account table do not exist");
+            //}
 
-                    foreach (var record in results)
-                    {
-                        var account = new Account()
-                        {
-                            Id = record.Id,
-                            AccountName = record.AccountName,
-                            AccountType = record.AccountType,
-                            Balance = record.Balance,
-                            CreatedDate = record.CreatedDate,
-                            OwnerUserId = record.OwnerUserId,
-                        };
+            //using (var reader = new StreamReader(TABLE_NAME))
+            //using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+            //{
+            //    var results = csv.GetRecords<AccountEntity>().ToList();
 
-                        accountList.Add(account);
-                    }
+            //    if (results.Any())
+            //    {
+            //        var accountList = new List<Account>();
 
-                    return accountList;
-                }
-                else
-                {
-                    throw new NotFoundException("No account records found");
-                }
-            }
+            //        foreach (var record in results)
+            //        {
+            //            var account = new Account()
+            //            {
+            //                Id = record.Id,
+            //                AccountName = record.AccountName,
+            //                AccountType = record.AccountType,
+            //                Balance = record.Balance,
+            //                CreatedDate = record.CreatedDate,
+            //                OwnerUserId = record.OwnerUserId,
+            //            };
+
+            //            accountList.Add(account);
+            //        }
+
+            //        return accountList;
+            //    }
+            //    else
+            //    {
+            //        throw new NotFoundException("No account records found");
+            //    }
+            //}
         }
 
         public Account UpdateAccountRecord(UpdateAccount account)

@@ -1,4 +1,4 @@
-using BankAccounts.API.DI_test;
+using System.Text.Json.Serialization;
 using BankAccounts.AppplicationData.DbContext;
 using BankAccounts.AppplicationData.Repositories;
 using BankAccounts.Repositories;
@@ -19,8 +19,14 @@ builder.Services.AddSingleton<MongoDbContext>();
 
 //Add automapper
 //builder.Services.AddAutoMapper(typeof(Program));
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
 
-builder.Services.AddControllers();
+    options.JsonSerializerOptions.DefaultIgnoreCondition =
+        JsonIgnoreCondition.WhenWritingNull;
+});
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -51,10 +57,8 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
-app.UseSwagger(options =>
-{
-    options.RouteTemplate = "/openapi/{documentName}.json";
-});
+app.UseSwagger();
+
 app.UseSwaggerUI();
 app.MapScalarApiReference();
 app.UseReDoc(options =>
