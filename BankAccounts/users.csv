@@ -10,3 +10,6 @@ UserId,UserName,Email,UserLastName,PhoneNumber,DateOfBirth,Gender,BillingAddress
 9,NewUser,33333444444,NewLastName,1234567890,01/01/2024 00:00:00,Man,Kyiv
 10,Sergei,sergei@gmail.com,Belialov,123123123,01/01/2024 00:00:00,Man,Winnipet 123
 11,Sergei2,sergei@gmail.com,Belialov,123123123,01/01/2024 00:00:00,Man,Winnipet 123,New York
+12,Sasha,33333444444,LastName,1234567890,01/01/2024 00:00:00,Man,Kyiv 123,New York
+13,Sasha,33333444444,LastName,1234567890,01/01/2024 00:00:00,Man,Kyiv 123,New York
+14,Sasha,33333444444,LastName,1234567890,01/01/2024 00:00:00,Man,Kyiv 123,New York

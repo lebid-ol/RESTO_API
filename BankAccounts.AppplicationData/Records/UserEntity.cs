@@ -1,4 +1,6 @@
-﻿using static BankAccounts.Shared.Models.GenderType;
+﻿using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Bson;
+using static BankAccounts.Shared.Models.GenderType;
 
 namespace BankAccounts.AppplicationData.Records
 {

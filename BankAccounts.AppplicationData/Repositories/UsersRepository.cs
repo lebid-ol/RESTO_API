@@ -8,6 +8,7 @@ using static BankAccounts.Shared.Models.GenderType;
 using BankAccounts.Shared.Models;
 using BankAccounts.Repositories;
 using BankAccounts.AppplicationData.DbContext;
+using BankAccounts.Records;
 
 namespace BankAccounts.AppplicationData.Repositories
 {
@@ -49,8 +50,9 @@ namespace BankAccounts.AppplicationData.Repositories
                 PhoneNumber = user.PhoneNumber,
                 DateOfBirth = user.DateOfBirth,
                 BillingAddress = user.BillingAddress,
-
             };
+
+            mongoContext.Users.InsertOne(userEntity);
 
             var users = new List<UserEntity>() { userEntity };
 

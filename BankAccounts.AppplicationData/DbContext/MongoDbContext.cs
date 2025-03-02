@@ -7,6 +7,7 @@ using MongoDB.Driver.Core.Configuration;
 using MongoDB.Driver;
 using MongoDB.Bson;
 using BankAccounts.Records;
+using BankAccounts.AppplicationData.Records;
 
 namespace BankAccounts.AppplicationData.DbContext
 {
@@ -21,5 +22,6 @@ namespace BankAccounts.AppplicationData.DbContext
         }
 
         public IMongoCollection<AccountEntity> Accounts => _database.GetCollection<AccountEntity>("accounts");
+        public IMongoCollection<UserEntity> Users => _database.GetCollection<UserEntity>("users");
     }
 }
