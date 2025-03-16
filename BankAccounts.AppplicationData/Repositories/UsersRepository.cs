@@ -9,6 +9,10 @@ using BankAccounts.Shared.Models;
 using BankAccounts.Repositories;
 using BankAccounts.AppplicationData.DbContext;
 using BankAccounts.Records;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
+using System.Text.Json.Serialization;
+using MongoDB.Driver;
 
 namespace BankAccounts.AppplicationData.Repositories
 {
@@ -16,25 +20,27 @@ namespace BankAccounts.AppplicationData.Repositories
     {
         User AddUserRecord(User users);
         User GetOneUserFromData(int userId);
-        IEnumerable<User> GetAllUsersFromData();
+        Task <List<User>> GetAllUsersFromData();
         User UpdateUserRecord(UpdateUser user);
         void DeleteUserFromData(int userId);
+       
+        
     }
 
     public class UsersRepository : IUserRepository
     {
         private const string TABLE_NAME = "users.csv";
-        private const string USER_ID_TRACKER = "userId.txt";
+        //private const string USER_ID_TRACKER = "userId.txt";
 
-        private readonly IAccountRepository _accountRepository;
-        private MongoDbContext mongoContext;
+        //private readonly IAccountRepository _accountRepository;
+        private readonly MongoDbContext _mongoContext;
 
         public UsersRepository(
-            IAccountRepository accountRepository,
+            //IAccountRepository accountRepository,
             MongoDbContext context)
         {
-            _accountRepository = accountRepository;
-            mongoContext = context;
+            //   _accountRepository = accountRepository;
+            _mongoContext = context;
         }
 
         public User AddUserRecord(User user)
@@ -43,7 +49,7 @@ namespace BankAccounts.AppplicationData.Repositories
 
             var userEntity = new UserEntity
             {
-                UserId = nextId,
+               // UserId = nextId,
                 UserName = user.UserName,
                 Email = user.Email,
                 UserLastName = user.UserLastName,
@@ -52,9 +58,9 @@ namespace BankAccounts.AppplicationData.Repositories
                 BillingAddress = user.BillingAddress,
             };
 
-            mongoContext.Users.InsertOne(userEntity);
+            _mongoContext.Users.InsertOne(userEntity);
 
-            var users = new List<UserEntity>() { userEntity };
+            /*var users = new List<UserEntity>() { userEntity };
 
             if (!File.Exists(TABLE_NAME))
             {
@@ -77,63 +83,65 @@ namespace BankAccounts.AppplicationData.Repositories
                 {
                     csv.WriteRecords(users);
                 }
-            }
-            user.UserId = nextId;
+            */
+            user.UserId = userEntity.UserId;
             return user;
-
-
-        }
-
-        public User GetOneUserFromData(int userId)
-        {
-            if (!File.Exists(TABLE_NAME))
-            {
-                throw new DontExistException("User table do not exist");
-            }
-
-            using (var reader = new StreamReader(TABLE_NAME))
-            using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
-            {
-                var records = csv.GetRecords<UserEntity>().ToList();
-
-                if (records.Any())
-                {
-                    var record = records.FirstOrDefault(x => x.UserId == userId);
-                    if (record != null)
-                    {
-                        var user = new User()
-                        {
-                            UserName = record.UserName,
-                            Email = record.Email,
-                            UserLastName = record.UserLastName,
-                            PhoneNumber = record.PhoneNumber,
-                            DateOfBirth = record.DateOfBirth,
-                            BillingAddress = record.BillingAddress,
-
-                        };
-
-                        var account = _accountRepository.GetAllAccountsByOwnerID(userId);
-                        user.Accounts = account;
-
-                        return user;
-
-                    }
-                    else
-                    {
-                        throw new NotFoundException("No user records found");
-                    }
-                }
-                else
-                {
-                    throw new NotFoundException("No user records found");
-                }
-            }
         }
 
 
-        public IEnumerable<User> GetAllUsersFromData()
+           public User GetOneUserFromData(int userId)
+          {
+            throw new NotImplementedException();
+            /* if (!File.Exists(TABLE_NAME))
+             {
+                 throw new DontExistException("User table do not exist");
+             }
+
+             using (var reader = new StreamReader(TABLE_NAME))
+             using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+             {
+                 var records = csv.GetRecords<UserEntity>().ToList();
+
+                 if (records.Any())
+                 {
+                     var record = records.FirstOrDefault(x => x.UserId == userId);
+                     if (record != null)
+                     {
+                         var user = new User()
+                         {
+                             UserName = record.UserName,
+                             Email = record.Email,
+                             UserLastName = record.UserLastName,
+                             PhoneNumber = record.PhoneNumber,
+                             DateOfBirth = record.DateOfBirth,
+                             BillingAddress = record.BillingAddress,
+
+                         };
+
+                         var account = _accountRepository.GetAllAccountsByOwnerID(userId);
+                         user.Accounts = account;
+
+                         return user;
+
+                     }
+                     else
+                     {
+                         throw new NotFoundException("No user records found");
+                     }
+                 }
+                 else
+                 {
+                     throw new NotFoundException("No user records found");
+                 }
+             }*/
+        }
+
+
+        public async Task<List<User>> GetAllUsersFromData()
         {
-            if (!File.Exists(TABLE_NAME))
+
+
+            /* if (File.Exists(TABLE_NAME))
             {
                 throw new DontExistException("User table do not exist");
             }
@@ -146,37 +154,44 @@ namespace BankAccounts.AppplicationData.Repositories
                 if (results.Any())
                 {
                     var userList = new List<User>();
+            */
 
-                    foreach (var record in results)
-                    {
-                        var user = new User()
-                        {
-                            UserId = record.UserId,
-                            UserName = record.UserName,
-                            Email = record.Email,
-                            UserLastName = record.UserLastName,
-                            PhoneNumber = record.PhoneNumber,
-                            DateOfBirth = record.DateOfBirth,
-                            BillingAddress = record.BillingAddress,
-                            Gender = record.Gender
+            var documents = await _mongoContext.Users.Find(new BsonDocument()).ToListAsync();
 
-                        };
+            var userList = new List<User>();
 
-                        userList.Add(user);
-
-                    }
-                    return userList;
-                }
-                else
+            foreach (var record in documents)
+            {
+                var user = new User()
                 {
-                    throw new NotFoundException("No user records found");
-                }
+                    UserId = record.UserId,
+                    UserName = record.UserName,
+                    Email = record.Email,
+                    UserLastName = record.UserLastName,
+                    PhoneNumber = record.PhoneNumber,
+                    DateOfBirth = record.DateOfBirth,
+                    BillingAddress = record.BillingAddress,
+                    Gender = record.Gender
+
+                };
+
+                userList.Add(user);
+
             }
+            return userList;
         }
+
+        /*  else
+          {
+              throw new NotFoundException("No user records found");
+          }
+      }*/
+    
 
         public User UpdateUserRecord(UpdateUser user)
         {
-            if (!File.Exists(TABLE_NAME))
+        throw new NotImplementedException();
+       /* if (!File.Exists(TABLE_NAME))
             {
                 throw new DontExistException("User table do not exist");
             }
@@ -235,64 +250,66 @@ namespace BankAccounts.AppplicationData.Repositories
             else
             {
                 throw new NotFoundException("No user records found");
-            }
+            }*/
         }
 
         public void DeleteUserFromData(int userId)
         {
-            if (!File.Exists(TABLE_NAME))
-            {
-                throw new DontExistException("User table do not exist");
-            }
-
-            var records = new List<UserEntity>();
-
-            using (var reader = new StreamReader(TABLE_NAME))
-            using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
-            {
-                records = csv.GetRecords<UserEntity>().ToList();
-            }
-
-            if (records.Any())
-            {
-                var index = records.FindIndex(x => x.UserId == userId);
-                if (index != -1)
+            throw new NotImplementedException();
+            /*
+                if (!File.Exists(TABLE_NAME))
                 {
-                    records.RemoveAt(index);
+                    throw new DontExistException("User table do not exist");
+                }
 
-                    using (var writer = new StreamWriter(TABLE_NAME))
-                    using (var csvToUpdate = new CsvWriter(writer, CultureInfo.InvariantCulture))
+                var records = new List<UserEntity>();
+
+                using (var reader = new StreamReader(TABLE_NAME))
+                using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+                {
+                    records = csv.GetRecords<UserEntity>().ToList();
+                }
+
+                if (records.Any())
+                {
+                    var index = records.FindIndex(x => x.UserId == userId);
+                    if (index != -1)
                     {
-                        csvToUpdate.WriteRecords(records);
-                    }
+                        records.RemoveAt(index);
 
+                        using (var writer = new StreamWriter(TABLE_NAME))
+                        using (var csvToUpdate = new CsvWriter(writer, CultureInfo.InvariantCulture))
+                        {
+                            csvToUpdate.WriteRecords(records);
+                        }
+
+                    }
+                    else
+                    {
+                        throw new NotFoundException("No user records found");
+                    }
                 }
                 else
                 {
                     throw new NotFoundException("No user records found");
                 }
-            }
-            else
-            {
-                throw new NotFoundException("No user records found");
-            }
+            */
         }
 
 
         private int GetNextUserID()
         {
-            if (!File.Exists(USER_ID_TRACKER))
+            if (!File.Exists("userId.txt"))
             {
-                File.WriteAllText(USER_ID_TRACKER, "1");
+                File.WriteAllText("userId.txt", "1");
                 return 1;
             }
-
             else
             {
-                var id = File.ReadAllText(USER_ID_TRACKER);
+                var id = File.ReadAllText("userId.txt");
                 var intId = int.Parse(id);
                 var nextId = intId + 1;
-                File.WriteAllText(USER_ID_TRACKER, nextId.ToString());
+                File.WriteAllText("userId.txt", nextId.ToString());
                 return nextId;
             }
         }

@@ -113,7 +113,7 @@ namespace BankAccounts.API.Controllers
 
         // PUT api/<UsersController>/5
         [HttpPut("{id}")]
-        public ActionResult UpdateUserById([FromRoute] int userId, [FromBody] UpdateUserRequest updateRequest)
+        public ActionResult UpdateUserById([FromRoute] string userId, [FromBody] UpdateUserRequest updateRequest)
         {
             try
             {
