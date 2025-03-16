@@ -13,7 +13,7 @@ namespace BankAccounts.Repositories
     public interface IAccountRepository
     {
         Account AddAcountRecord(Account accounts);
-        Account GetOneAccountFromData(int accountId);
+        Task<Account> GetOneAccountFromData(string accountId);
         Task<List<Account>> GetAllAccountsFromData();
         Account UpdateAccountRecord(UpdateAccount account);
         void DeleteAccountFromData(int accountId);
@@ -32,12 +32,8 @@ namespace BankAccounts.Repositories
             _mongoContext = context;
         }
 
-     
-
         public Account AddAcountRecord(Account account)
         {
-            var nextId = GetNextAccountID();
-
             var accountEntity = new AccountEntity
             {
                 AccountName = account.AccountName,
@@ -47,54 +43,34 @@ namespace BankAccounts.Repositories
                 OwnerUserId = account.OwnerUserId,
             };
 
-
-            _mongoContext.Accounts.InsertOne(accountEntity);
+             _mongoContext.Accounts.InsertOne(accountEntity);
 
             account.Id = accountEntity.Id;
             return account;
-
         }
 
-        public Account GetOneAccountFromData(int accountId)
+        public async Task<Account> GetOneAccountFromData(string accountId)
         {
-            throw new NotImplementedException();
-            //if (!File.Exists(TABLE_NAME))
-            //{
-            //    throw new DontExistException("Account table do not exist");
-            //}
+            var taskResult = await _mongoContext.Accounts.FindAsync(x => x.Id == accountId);
+            var accountEntity = taskResult.FirstOrDefault();
 
-            //using (var reader = new StreamReader(TABLE_NAME))
-            //using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
-            //{
-            //    var records = csv.GetRecords<AccountEntity>().ToList();
+            if (accountEntity != null) 
+            {
+                var account = new Account()
+                {
+                    AccountName = accountEntity.AccountName,
+                    AccountType = accountEntity.AccountType,
+                    Balance = accountEntity.Balance,
+                    CreatedDate = accountEntity.CreatedDate,
+                    Id = accountEntity.Id,
+                    OwnerUserId = accountEntity.OwnerUserId,
+                    UpdateDate = accountEntity.UpdateDate
+                };
 
-            //    if (records.Any())
-            //    {
-            //        var record = records.FirstOrDefault(x => x.Id == accountId);
-            //        if (record != null)
-            //        {
-            //            var account = new Account()
-            //            {
-            //                Id = record.Id,
-            //                AccountName = record.AccountName,
-            //                AccountType = record.AccountType,
-            //                Balance = record.Balance,
-            //                CreatedDate = record.CreatedDate,
-            //                OwnerUserId = record.OwnerUserId,
-            //            };
+                return account;
+            }
 
-            //            return account;
-            //        }
-            //        else
-            //        {
-            //            throw new NotFoundException("No account records found");
-            //        }
-            //    }
-            //    else
-            //    {
-            //        throw new NotFoundException("No account records found");
-            //    }
-            //}
+            throw new NotFoundException("No account records found");
         }
 
         public async Task<List<Account>> GetAllAccountsFromData()
@@ -119,44 +95,6 @@ namespace BankAccounts.Repositories
             }
 
             return accountList;
-
-            //// TODO: Delete after migration
-            //if (!File.Exists(TABLE_NAME))
-            //{
-            //    throw new DontExistException("Account table do not exist");
-            //}
-
-            //using (var reader = new StreamReader(TABLE_NAME))
-            //using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
-            //{
-            //    var results = csv.GetRecords<AccountEntity>().ToList();
-
-            //    if (results.Any())
-            //    {
-            //        var accountList = new List<Account>();
-
-            //        foreach (var record in results)
-            //        {
-            //            var account = new Account()
-            //            {
-            //                Id = record.Id,
-            //                AccountName = record.AccountName,
-            //                AccountType = record.AccountType,
-            //                Balance = record.Balance,
-            //                CreatedDate = record.CreatedDate,
-            //                OwnerUserId = record.OwnerUserId,
-            //            };
-
-            //            accountList.Add(account);
-            //        }
-
-            //        return accountList;
-            //    }
-            //    else
-            //    {
-            //        throw new NotFoundException("No account records found");
-            //    }
-            //}
         }
 
         public Account UpdateAccountRecord(UpdateAccount account)
@@ -258,25 +196,6 @@ namespace BankAccounts.Repositories
             //    {
             //        throw new NotFoundException("No account records found");
             //    }
-        }
-
-        private int GetNextAccountID()
-        {
-            if (!File.Exists("accountId.txt"))
-            {
-                File.WriteAllText("accountId.txt", "1");
-
-                return 1;
-            }
-            else
-            {
-                var id = File.ReadAllText("accountId.txt");
-                var intId = int.Parse(id);
-                var nextId = intId + 1;
-                File.WriteAllText("accountId.txt", nextId.ToString());
-                return nextId;
-            }
-
         }
 
         public Account GetByOwnerId(int ownerId)

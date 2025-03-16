@@ -6,7 +6,7 @@ namespace BankAccounts.Services
     public interface IAccountService
     {
         Account AddAccount(Account accountRequest);
-        Account? GetAccount(int id);
+        Task<Account> GetAccount(string id);
         Task<List<Account>> GetAccounts();
         Account UpdateAccount(UpdateAccount requets);
         void DeleteAccount(int id);
@@ -34,24 +34,20 @@ namespace BankAccounts.Services
 
         
 
-        public Account? GetAccount(int id)
+        public Task<Account> GetAccount(string id)
         {
            
             var findAccount = _accountsRepository.GetOneAccountFromData(id);
-                
-            if (findAccount == null)
-            {
-                return null;
-            }
-
+       
             return findAccount;
 
         }
 
-        public Task<List <Account>> GetAccounts()
+        public Task<List<Account>> GetAccounts()
         {
             var findAllAccount = _accountsRepository.GetAllAccountsFromData();
 
+            
             return findAllAccount;
 
         }

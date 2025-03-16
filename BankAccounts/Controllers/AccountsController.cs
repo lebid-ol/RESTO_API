@@ -53,14 +53,21 @@ namespace BankAccounts.Controllers
 
         // GET api/<AccountsController>/5
         [HttpGet("{id}")]
-        public ActionResult<AccountResponse> GetAccountById([FromRoute] int id)
+        public async Task<ActionResult<AccountResponse>> GetAccountById([FromRoute] string id)
         {
             try
             {
+                var account = await _accountService.GetAccount(id);
 
-                var account = _accountService.GetAccount(id);
+                var response = new AccountResponse() 
+                { 
+                    Id = account.Id,
+                    AccountName = account.AccountName,
+                    AccountType = account.AccountType,
+                    Balance = account.Balance   
+                };
 
-                return Ok(account);
+                return Ok(response);
             }
             catch (NotFoundException ex)
             {
