@@ -65,7 +65,7 @@ namespace BankAccounts.Services
 
         }
 
-        public IEnumerable<User> GetUsers()
+        public Task <List<User>> GetUsers()
         {
             var findAllUser = _usersRepository.GetAllUsersFromData();
 
@@ -95,9 +95,12 @@ namespace BankAccounts.Services
         public void DeleteUser(int id)
         {
             _usersRepository.DeleteUserFromData(id);
-        } 
+        }
 
-      
+        IEnumerable<User> IUserService.GetUsers()
+        {
+            throw new NotImplementedException();
+        }
     }
 
 
