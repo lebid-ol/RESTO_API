@@ -48,11 +48,23 @@ namespace BankAccounts.API.Controllers
 
         // GET api/<UsersController>/5
         [HttpGet("{id}")]
-        public ActionResult<UserResponse> GetUserById([FromRoute] int id)
+        public async Task <ActionResult<UserResponse>> GetUserById([FromRoute] string id)
         {
             try
             {
-                var user = _userService.GetUser(id);
+                var user = await _userService.GetUser(id);
+
+                var response = new UserResponse()
+                {
+                    UserName = user.UserName,
+                    Email = user.Email,
+                    UserLastName = user.UserLastName,
+                    PhoneNumber = user.PhoneNumber,
+                    DateOfBirth = user.DateOfBirth,
+                    Gender = user.Gender,
+                    BillingAddress = user.BillingAddress
+                    
+                 };
 
                 return Ok(user);
             }

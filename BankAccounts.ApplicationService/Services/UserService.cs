@@ -8,8 +8,8 @@ namespace BankAccounts.Services
     public interface IUserService
     {
         User AddUser(User userRequest);
-        User? GetUser(int id);
-        IEnumerable<User> GetUsers();
+        Task <User> GetUser(string id);
+        Task <List <User>> GetUsers();
         User UpdateUser(UpdateUser requets);
         void DeleteUser(int id);
 
@@ -51,15 +51,10 @@ namespace BankAccounts.Services
 
         }
 
-        public User? GetUser(int id)
+        public Task <User> GetUser(string id)
         {
 
             var findUser = _usersRepository.GetOneUserFromData(id);
-
-            if (findUser == null)
-            {
-                return null;
-            }
 
             return findUser;
 
@@ -97,10 +92,6 @@ namespace BankAccounts.Services
             _usersRepository.DeleteUserFromData(id);
         }
 
-        IEnumerable<User> IUserService.GetUsers()
-        {
-            throw new NotImplementedException();
-        }
     }
 
 
