@@ -3,7 +3,7 @@
     public class UpdateAccount
     { 
         public string AccountName { get; set; }
-        public int Id { get; set; }
+        public string Id { get; set; }
         public DateTime UpdateDate { get; set; }
     }
 }

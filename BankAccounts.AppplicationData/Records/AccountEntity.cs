@@ -19,6 +19,6 @@ namespace BankAccounts.Records
         [BsonRepresentation(BsonType.String)]
         public AccountType AccountType { get; set; }
 
-        public int OwnerUserId { get; set; }
+        public string OwnerUserId { get; set; }
     }
 }

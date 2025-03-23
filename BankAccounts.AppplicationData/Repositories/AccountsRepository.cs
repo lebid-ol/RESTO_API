@@ -2,11 +2,8 @@
 using BankAccounts.Exceptions;
 using BankAccounts.Records;
 using BankAccounts.Shared.Models;
-using CsvHelper;
-using CsvHelper.Configuration;
 using MongoDB.Bson;
 using MongoDB.Driver;
-using System.Globalization;
 
 namespace BankAccounts.Repositories
 {
@@ -15,16 +12,13 @@ namespace BankAccounts.Repositories
         Account AddAcountRecord(Account accounts);
         Task<Account> GetOneAccountFromData(string accountId);
         Task<List<Account>> GetAllAccountsFromData();
-        Account UpdateAccountRecord(UpdateAccount account);
-        void DeleteAccountFromData(int accountId);
-        Account GetByOwnerId(int ownerId);
-        List <Account> GetAllAccountsByOwnerID(int ownerId);
+        Task<Account> UpdateAccountRecord(UpdateAccount account);
+        Task DeleteAccountFromData(string accountId);
+        Task<List<Account>> GetAllAccountsByOwnerId(string ownerId);
     }
 
     public class AccountsRepository : IAccountRepository
     {
-        private const string TABLE_NAME = "accounts.csv";
-
         private readonly MongoDbContext _mongoContext;
 
         public AccountsRepository(MongoDbContext context)
@@ -97,197 +91,96 @@ namespace BankAccounts.Repositories
             return accountList;
         }
 
-        public Account UpdateAccountRecord(UpdateAccount account)
+        public async Task<Account> UpdateAccountRecord(UpdateAccount account)
         {
-            throw new NotImplementedException();
-            //if (!File.Exists(TABLE_NAME))
-            //{
-            //    throw new DontExistException("Account table do not exist");
-            //}
+            var filter = Builders<AccountEntity>.Filter.Eq(x => x.Id, account.Id);
 
-            //var results = new List<AccountEntity>();
+            var update = Builders<AccountEntity>.Update
+                .Set(x => x.AccountName, account.AccountName)
+                .Set(x => x.UpdateDate, account.UpdateDate);
 
-            //// получить все данные
-            //using (var reader = new StreamReader(TABLE_NAME))
-            //using (var csvReader = new CsvReader(reader, CultureInfo.InvariantCulture))
-            //{
-            //    results = csvReader.GetRecords<AccountEntity>().ToList();
-            //}
+            var updateResult = await _mongoContext.Accounts.UpdateOneAsync(filter, update);
 
-            //if (results.Any())
-            //{
-            //    var record = results.FirstOrDefault(x => x.Id == account.Id);
+            if (updateResult.ModifiedCount == 1)
+            {
+                var taskResult = await _mongoContext.Accounts.FindAsync(x => x.Id == account.Id);
+                var accountEntity = taskResult.FirstOrDefault();
 
-            //    if (record != null)
-            //    {
-            //        record.AccountName = account.AccountName;
-            //        record.UpdateDate = account.UpdateDate;
+                if (accountEntity != null)
+                {
+                    var accountUpdate = new Account()
+                    {
+                        AccountName = accountEntity.AccountName,
+                        AccountType = accountEntity.AccountType,
+                        Balance = accountEntity.Balance,
+                        CreatedDate = accountEntity.CreatedDate,
+                        Id = accountEntity.Id,
+                        OwnerUserId = accountEntity.OwnerUserId,
+                        UpdateDate = accountEntity.UpdateDate
+                    };
 
-            //        var index = results.FindIndex(x => x.Id == account.Id);
+                    return accountUpdate;
+                }
+            }
 
-            //        results[index] = record;
+            if (updateResult.ModifiedCount > 1)
+            {
+                Console.WriteLine("MEssage to developer");
+                throw new Exception("Developer exception");
+            }
 
-            //        using var writer = new StreamWriter(TABLE_NAME);
-            //        using var csvWriter = new CsvWriter(writer, CultureInfo.InvariantCulture);
-            //        {
-            //            csvWriter.WriteRecords(results);
-
-            //            var updatedAccount = new Account()
-            //            {
-            //                Id = record.Id,
-            //                AccountName = record.AccountName,
-            //                AccountType = record.AccountType,
-            //                Balance = record.Balance,
-            //                CreatedDate = record.CreatedDate,
-            //                OwnerUserId = record.OwnerUserId,
-            //                UpdateDate  = record.UpdateDate
-            //            };
-
-            //            return updatedAccount;
-            //        }
-            //    }
-            //    else
-            //    {
-            //        throw new NotFoundException("No account records found");
-            //    }
-            //}
-            //else
-            //{
-            //    throw new NotFoundException("No account records found");
-            //}
+            throw new NotFoundException("No account records found");
         }
 
-        public void DeleteAccountFromData(int accountId)
+        public async Task DeleteAccountFromData(string accountId)
         {
-            throw new NotImplementedException();
-            //if (!File.Exists(TABLE_NAME))
-            //{
-            //    throw new DontExistException("Account table do not exist");
-            //}
+            var  deleteResult = await _mongoContext.Accounts.DeleteOneAsync(x => x.Id == accountId);
 
-            //var records = new List<AccountEntity>();
+            if (deleteResult.DeletedCount == 1)
+            {
+                return;
+            }
 
-            //using (var reader = new StreamReader(TABLE_NAME))
-            //using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
-            //{
-            //    records = csv.GetRecords<AccountEntity>().ToList();
-            //}
+            if (deleteResult.DeletedCount > 1)
+            {
+                Console.WriteLine("MEssage to developer");
+                throw new Exception("Developer exception");
+            }
 
-            //if (records.Any())
-            //    {
-            //        var index = records.FindIndex(x => x.Id == accountId);
-            //        if (index != -1)
-            //        {
-            //            records.RemoveAt(index);
-
-            //            using (var writer = new StreamWriter(TABLE_NAME))
-            //            using (var csvToUpdate = new CsvWriter(writer, CultureInfo.InvariantCulture))
-            //            {
-            //                csvToUpdate.WriteRecords(records);
-            //            }
-
-            //        }
-            //        else
-            //        {
-            //            throw new NotFoundException("No account records found");
-            //        }
-            //    }
-            //else
-            //    {
-            //        throw new NotFoundException("No account records found");
-            //    }
+            throw new NotFoundException("No account records found");
         }
 
-        public Account GetByOwnerId(int ownerId)
+        public async Task<List<Account>> GetAllAccountsByOwnerId(string ownerId)
         {
-            if (!File.Exists(TABLE_NAME))
+            var taskResult = await _mongoContext.Accounts.FindAsync(x => x.OwnerUserId == ownerId);
+            var accountEntity = taskResult.ToList();
+
+            if (accountEntity.Any())
             {
-                throw new DontExistException("Account table do not exist");
+                var result = new List<Account>();
+
+                foreach (var item in accountEntity)
+                {
+                    var account = new Account()
+                    {
+                        AccountName = item.AccountName,
+                        AccountType = item.AccountType,
+                        Balance = item.Balance,
+                        CreatedDate = item.CreatedDate,
+                        Id = item.Id,
+                        OwnerUserId = item.OwnerUserId,
+                        UpdateDate = item.UpdateDate
+                    };
+                    
+                    result.Add(account);
+                }
+
+                return result;
             }
 
-            using (var reader = new StreamReader(TABLE_NAME))
-            using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
-            {
-                var records = csv.GetRecords<AccountEntity>().ToList();
-
-                if (records.Any())
-                {
-                    var record = records.FirstOrDefault(x => x.OwnerUserId == ownerId);
-                    if (record != null)
-                    {
-                        var account = new Account()
-                        {
-                            Id = record.Id,
-                            AccountName = record.AccountName,
-                            AccountType = record.AccountType,
-                            Balance = record.Balance,
-                            CreatedDate = record.CreatedDate,
-                            OwnerUserId = record.OwnerUserId,
-                        };
-
-                        return account;
-                    }
-                    else
-                    {
-                        throw new NotFoundException("No account records found");
-                    }
-                }
-                else
-                {
-                    throw new NotFoundException("No account records found");
-                }
-            }
-        }
-
-        public List <Account> GetAllAccountsByOwnerID(int ownerId)
-        {
-            if (!File.Exists(TABLE_NAME))
-            {
-                throw new DontExistException("Account table do not exist");
-            }
-
-            using (var reader = new StreamReader(TABLE_NAME))
-            using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
-            {
-                var records = csv.GetRecords<AccountEntity>().ToList();
-
-                if (records.Any())
-                {
-                    var accountList = new List<Account>();
-                    var filteredRecords = records.Where(x => x.OwnerUserId == ownerId).ToList();
-                    if (filteredRecords != null)
-                    {
-                        foreach (var record in filteredRecords)
-                        {
-                            var account = new Account()
-                            {
-                                Id = record.Id,
-                                AccountName = record.AccountName,
-                                AccountType = record.AccountType,
-                                Balance = record.Balance,
-                                CreatedDate = record.CreatedDate,
-                                OwnerUserId = record.OwnerUserId,
-                            };
-
-                            accountList.Add(account);
-                        }
-
-                            return accountList;
-                    }
-                    else
-                    {
-                        throw new NotFoundException("No account records found");
-                    }
-                }
-                else
-                {
-                    throw new NotFoundException("No account records found");
-                }
-            }
+            throw new NotFoundException("No account records found");
         }
     }
-
-
 }
 
 

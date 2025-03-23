@@ -8,8 +8,9 @@ namespace BankAccounts.Services
         Account AddAccount(Account accountRequest);
         Task<Account> GetAccount(string id);
         Task<List<Account>> GetAccounts();
-        Account UpdateAccount(UpdateAccount requets);
-        void DeleteAccount(int id);
+        Task<Account> UpdateAccount(UpdateAccount requets);
+        Task DeleteAccount(string id);
+        Task<List<Account>> GetAllUserAccounts(string ownerId);
     }
 
     public class AccountService : IAccountService
@@ -52,7 +53,7 @@ namespace BankAccounts.Services
 
         }
 
-        public Account UpdateAccount(UpdateAccount updatedAccount)
+        public Task<Account> UpdateAccount(UpdateAccount updatedAccount)
         {
             updatedAccount.UpdateDate = DateTime.Now;
 
@@ -60,9 +61,14 @@ namespace BankAccounts.Services
             return account;
         }
 
-        public void DeleteAccount(int id)
+        public Task DeleteAccount(string id)
         {
-            _accountsRepository.DeleteAccountFromData(id);
+            return  _accountsRepository.DeleteAccountFromData(id);
+        }
+
+        public Task<List<Account>> GetAllUserAccounts(string ownerId)
+        {
+            return _accountsRepository.GetAllAccountsByOwnerId(ownerId);
         }
     }
     

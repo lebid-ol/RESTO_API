@@ -1,16 +1,10 @@
-﻿using System;
-using BankAccounts.API.DI_test;
-using BankAccounts.AppplicationData.DbContext;
-using BankAccounts.Exceptions;
-using BankAccounts.Records;
+﻿using BankAccounts.Exceptions;
 using BankAccounts.RequestModel;
 using BankAccounts.ResponseModels;
 using BankAccounts.Services;
 using BankAccounts.Shared.Models;
 using BankAccounts.Shared.Models.Request;
-using CsvHelper;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 namespace BankAccounts.Controllers
 {
@@ -27,15 +21,26 @@ namespace BankAccounts.Controllers
 
         // GET: api/<AccountsController>
         [HttpGet]
-        public ActionResult<List<AccountResponse>> GetAllAccounts()
+        public async Task<ActionResult<List<AccountResponse>>> GetAllAccounts()
         {
-
             try
             {
-                var allAccounts = _accountService.GetAccounts();
+                var allAccounts = await _accountService.GetAccounts();
+                var response =  new List<AccountResponse>();
+                foreach (var account in allAccounts)
+                {
+                    var accountResponse = new AccountResponse
+                    {
+                        Id = account.Id,
+                        AccountName = account.AccountName,
+                        AccountType = account.AccountType,
+                        Balance = account.Balance
+                    };
 
-                return Ok(allAccounts);
+                    response.Add(accountResponse);
+                }
 
+                return Ok(response);
             }
             catch (NotFoundException ex)
             {
@@ -86,7 +91,7 @@ namespace BankAccounts.Controllers
 
         // POST api/<AccountsController>
         [HttpPost]
-        public ActionResult<AccountResponse> CreateAccount([FromBody] AccountRequest request)
+        public async Task<ActionResult<AccountResponse>> CreateAccount([FromBody] AccountRequest request)
         {
             try
             {
@@ -117,7 +122,7 @@ namespace BankAccounts.Controllers
 
         // PUT api/<AccountsController>/5
         [HttpPut("{id}")]
-        public ActionResult<AccountResponse> UpdateAccountById([FromRoute] int id, [FromBody] UpdateAccountRequets updateRequest)
+        public async Task<ActionResult<AccountResponse>> UpdateAccountById([FromRoute] string id, [FromBody] UpdateAccountRequets updateRequest)
         {
             try
             {
@@ -127,9 +132,17 @@ namespace BankAccounts.Controllers
                     AccountName = updateRequest.AccountName,
                 };
 
-                var updatedAccount = _accountService.UpdateAccount(updateAccount);
+                var updatedAccount = await _accountService.UpdateAccount(updateAccount);
 
-                return Accepted(updatedAccount);
+                var response = new AccountResponse()
+                {
+                    AccountName = updatedAccount.AccountName,
+                    Id = updatedAccount.Id,
+                    AccountType = updatedAccount.AccountType,
+                    Balance = updatedAccount.Balance
+                };
+
+                return Accepted(response);
             }
             catch (NotFoundException ex)
             {
@@ -147,11 +160,11 @@ namespace BankAccounts.Controllers
 
         // DELETE api/<AccountsController>/5
         [HttpDelete("{id}")]
-        public ActionResult<string> DeleteAccountById([FromRoute] int id)
+        public async Task<ActionResult<string>> DeleteAccountById([FromRoute] string id)
         {
             try
             {
-                _accountService.DeleteAccount(id);
+                await _accountService.DeleteAccount(id);
 
                 return NoContent();
 
