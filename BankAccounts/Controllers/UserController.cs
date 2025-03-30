@@ -6,6 +6,7 @@ using BankAccounts.Shared.Models;
 using BankAccounts.Shared.Models.Requests;
 using BankAccounts.Shared.Models.Responses;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.VisualBasic;
 using static BankAccounts.Shared.Models.GenderType;
 
 namespace BankAccounts.API.Controllers
@@ -23,11 +24,27 @@ namespace BankAccounts.API.Controllers
 
         //GET: api/<UserController>
         [HttpGet]
-        public ActionResult<List<UserResponse>> GetAllUsers()
+        public async Task<ActionResult<List<UserResponse>>> GetAllUsers()
         {
             try
             {
-                var allUsers = _userService.GetUsers();
+                var allUsers = await _userService.GetUsers();
+                var response = new List<UserResponse>();
+                foreach (var user in allUsers)
+                {
+                    var userResponse = new UserResponse()
+                    {
+                        UserName = user.UserName,
+                        Email = user.Email,
+                        UserLastName = user.UserLastName,
+                        PhoneNumber = user.PhoneNumber,
+                        DateOfBirth = user.DateOfBirth,
+                        Gender = user.Gender,
+                        BillingAddress = user.BillingAddress
+                    };                    ;
+
+                    response.Add(userResponse);
+                }
 
                 return Ok(allUsers);
 
@@ -48,13 +65,13 @@ namespace BankAccounts.API.Controllers
 
         // GET api/<UsersController>/5
         [HttpGet("{id}")]
-        public async Task <ActionResult<UserResponse>> GetUserById([FromRoute] string id)
+        public async Task <ActionResult<UserWithAccounts>> GetUserById([FromRoute] string id)
         {
             try
             {
-                var user = await _userService.GetUser(id);
-
-                var response = new UserResponse()
+                var userWithAccounts = await _userService.GetUser(id);
+               
+               /* var response = new UserResponse()
                 {
                     UserName = user.UserName,
                     Email = user.Email,
@@ -62,11 +79,11 @@ namespace BankAccounts.API.Controllers
                     PhoneNumber = user.PhoneNumber,
                     DateOfBirth = user.DateOfBirth,
                     Gender = user.Gender,
-                    BillingAddress = user.BillingAddress
-                    
-                 };
+                    BillingAddress = user.BillingAddress,
+                                        
+                 };*/
 
-                return Ok(user);
+                return Ok(userWithAccounts);
             }
             catch (NotFoundException ex)
             {
@@ -84,7 +101,7 @@ namespace BankAccounts.API.Controllers
 
         // POST api/<UserssController>
         [HttpPost]
-        public ActionResult<UserResponse> CreateUser([FromBody] UserRequest request)
+        public async Task <ActionResult<UserResponse>> CreateUser([FromBody] UserRequest request)
         {
            try
             {
@@ -125,7 +142,7 @@ namespace BankAccounts.API.Controllers
 
         // PUT api/<UsersController>/5
         [HttpPut("{id}")]
-        public ActionResult UpdateUserById([FromRoute] string userId, [FromBody] UpdateUserRequest updateRequest)
+        public async Task <ActionResult<UserResponse>>UpdateUserById([FromRoute] string userId, [FromBody] UpdateUserRequest updateRequest)
         {
             try
             {
@@ -141,9 +158,19 @@ namespace BankAccounts.API.Controllers
 
                 };
 
-                var updatedUser = _userService.UpdateUser(updateUser);
+                var updatedUser = await _userService.UpdateUser(updateUser);
 
-                return Accepted(updatedUser);
+                var response = new UserResponse()
+                {
+                    UserName = updateUser.UserName,
+                    Email = updateUser.Email,
+                    UserLastName = updateUser.UserLastName,
+                    PhoneNumber = updateUser.PhoneNumber,
+                    DateOfBirth = updateUser.DateOfBirth,
+                    BillingAddress = updateUser.BillingAddress
+                };
+
+                return Accepted(response);
             }
             catch (NotFoundException ex)
             {
@@ -161,11 +188,11 @@ namespace BankAccounts.API.Controllers
 
         // DELETE api/<UsersController>/5
         [HttpDelete("{id}")]
-        public ActionResult<UserEntity> DeleteUserById([FromRoute] int id)
+        public async Task <ActionResult<string>> DeleteUserById([FromRoute] string id)
         {
             try
             {
-                _userService.DeleteUser(id);
+               await  _userService.DeleteUser(id);
 
                 return NoContent();
 
