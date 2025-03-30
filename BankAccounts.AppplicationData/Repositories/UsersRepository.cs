@@ -1,6 +1,4 @@
 ﻿using BankAccounts.Exceptions;
-using CsvHelper.Configuration;
-using CsvHelper;
 using System.Globalization;
 using BankAccounts.AppplicationData.Records;
 using System.Runtime.ConstrainedExecution;
@@ -21,15 +19,14 @@ namespace BankAccounts.AppplicationData.Repositories
         User AddUserRecord(User users);
         Task <User> GetOneUserFromData(string userId);
         Task <List<User>> GetAllUsersFromData();
-        User UpdateUserRecord(UpdateUser user);
-        void DeleteUserFromData(int userId);
+        Task <User> UpdateUserRecord(UpdateUser user);
+        Task DeleteUserFromData(string userId);
        
         
     }
 
     public class UsersRepository : IUserRepository
     {
-        private const string TABLE_NAME = "users.csv";
         //private const string USER_ID_TRACKER = "userId.txt";
 
         //private readonly IAccountRepository _accountRepository;
@@ -120,114 +117,72 @@ namespace BankAccounts.AppplicationData.Repositories
         }
     
 
-        public User UpdateUserRecord(UpdateUser user)
+        public async Task <User> UpdateUserRecord(UpdateUser user)
         {
-        throw new NotImplementedException();
-       /* if (!File.Exists(TABLE_NAME))
+            var filter = Builders<UserEntity>.Filter.Eq(x => x.UserId, user.UserId);
+
+            var update = Builders<UserEntity>.Update
+                .Set(x => x.UserName, user.UserName)
+                .Set(x => x.Email, user.Email)
+                .Set(x => x.UserLastName, user.UserLastName)
+                .Set(x => x.PhoneNumber, user.PhoneNumber)
+                .Set(x => x.DateOfBirth, user.DateOfBirth)
+                .Set(x => x.BillingAddress, user.BillingAddress);
+
+        var updateResult = await _mongoContext.Users.UpdateOneAsync(filter, update);
+
+            if (updateResult.ModifiedCount == 1)
             {
-                throw new DontExistException("User table do not exist");
-            }
+                var taskResult = await _mongoContext.Users.FindAsync(x => x.UserId == user.UserId);
+                var userEntity = taskResult.FirstOrDefault();
 
-            var results = new List<UserEntity>();
-
-            using (var reader = new StreamReader(TABLE_NAME))
-            using (var csvReader = new CsvReader(reader, CultureInfo.InvariantCulture))
-            {
-                results = csvReader.GetRecords<UserEntity>().ToList();
-            }
-
-            if (results.Any())
-            {
-                var record = results.FirstOrDefault(x => x.UserId == user.UserId);
-
-                if (record != null)
+                if (userEntity != null)
                 {
-                    record.PhoneNumber = user.PhoneNumber;
-                    record.Email = user.Email;
-                    record.UserName = user.UserName;
-                    record.UserLastName = user.UserLastName;
-                    record.DateOfBirth = user.DateOfBirth;
-                    record.BillingAddress = user.BillingAddress;
-
-
-                    var index = results.FindIndex(x => x.UserId == user.UserId);
-
-                    results[index] = record;
-
-                    using var writer = new StreamWriter(TABLE_NAME);
-                    using var csvWriter = new CsvWriter(writer, CultureInfo.InvariantCulture);
+                    var userUpdate = new User()
                     {
-                        csvWriter.WriteRecords(results);
+                        UserId = userEntity.UserId,
+                        UserName = userEntity.UserName,
+                        Email = userEntity.Email,
+                        UserLastName = userEntity.UserLastName,
+                        PhoneNumber = userEntity.PhoneNumber,
+                        DateOfBirth = userEntity.DateOfBirth,
+                        BillingAddress = userEntity.BillingAddress,
+                        Gender = userEntity.Gender
+                    };
 
-                        var updateUser = new User()
-                        {
-                            UserId = record.UserId,
-                            UserName = record.UserName,
-                            Email = record.Email,
-                            UserLastName = record.UserLastName,
-                            PhoneNumber = record.PhoneNumber,
-                            DateOfBirth = record.DateOfBirth,
-                            BillingAddress = record.BillingAddress,
-                            Gender = record.Gender
-                        };
-
-                        return updateUser;
+                        return userUpdate;
                     }
                 }
-                else
-                {
-                    throw new NotFoundException("No user records found");
-                }
-            }
-            else
-            {
+                 if (updateResult.ModifiedCount > 1)
+                 {
+                   Console.WriteLine("MEssage to developer(problem with user update)");
+                   throw new Exception("Developer exception");
+                 }
+       
                 throw new NotFoundException("No user records found");
-            }*/
+            
         }
 
-        public void DeleteUserFromData(int userId)
+        public async Task DeleteUserFromData(string userId)
         {
-            throw new NotImplementedException();
-            /*
-                if (!File.Exists(TABLE_NAME))
-                {
-                    throw new DontExistException("User table do not exist");
-                }
+            var deleteResult = await _mongoContext.Users.DeleteOneAsync(x => x.UserId == userId);
 
-                var records = new List<UserEntity>();
+            if (deleteResult.DeletedCount == 1)
+            {
+                return;
+            }
 
-                using (var reader = new StreamReader(TABLE_NAME))
-                using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
-                {
-                    records = csv.GetRecords<UserEntity>().ToList();
-                }
+            if (deleteResult.DeletedCount > 1)
+            {
+                Console.WriteLine("MEssage to developer");
+                throw new Exception("Developer exception");
+            }
 
-                if (records.Any())
-                {
-                    var index = records.FindIndex(x => x.UserId == userId);
-                    if (index != -1)
-                    {
-                        records.RemoveAt(index);
-
-                        using (var writer = new StreamWriter(TABLE_NAME))
-                        using (var csvToUpdate = new CsvWriter(writer, CultureInfo.InvariantCulture))
-                        {
-                            csvToUpdate.WriteRecords(records);
-                        }
-
-                    }
-                    else
-                    {
-                        throw new NotFoundException("No user records found");
-                    }
-                }
-                else
-                {
-                    throw new NotFoundException("No user records found");
-                }
-            */
+            throw new NotFoundException("No users records found");
         }
+
     }
 }
+
 
 
