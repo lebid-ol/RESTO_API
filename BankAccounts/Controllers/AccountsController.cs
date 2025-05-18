@@ -1,10 +1,12 @@
-﻿using BankAccounts.Exceptions;
+﻿using BankAccounts.AppplicationData.DbContext;
+using BankAccounts.Exceptions;
 using BankAccounts.RequestModel;
 using BankAccounts.ResponseModels;
 using BankAccounts.Services;
 using BankAccounts.Shared.Models;
 using BankAccounts.Shared.Models.Request;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace BankAccounts.Controllers
 {
@@ -14,9 +16,15 @@ namespace BankAccounts.Controllers
     {
         private readonly IAccountService _accountService;
 
-        public AccountsController(IAccountService accountService)
+        public AccountsController(
+            IAccountService accountService,
+            IOptions<AzureSettingsOptions> azureOptions,
+            IOptions<MyOptions> myOptions)
         {
-             _accountService = accountService;
+            _accountService = accountService;
+            var azureSettings = azureOptions.Value;
+            var mySettings = myOptions.Value;
+            Console.WriteLine();
         }
 
         // GET: api/<AccountsController>
