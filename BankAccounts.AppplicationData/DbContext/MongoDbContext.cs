@@ -47,6 +47,6 @@ namespace BankAccounts.AppplicationData.DbContext
     public class MyConstants
     {
         public const string UserTable = "users";
-        public const string AccountsTable = "account";
+        public const string AccountsTable = "accounts";
     }
 }

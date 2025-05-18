@@ -31,6 +31,8 @@ namespace BankAccounts.Controllers
         [HttpGet]
         public async Task<ActionResult<List<AccountResponse>>> GetAllAccounts()
         {
+
+            var requsetHeaders = Request.Headers;
             try
             {
                 var allAccounts = await _accountService.GetAccounts();
