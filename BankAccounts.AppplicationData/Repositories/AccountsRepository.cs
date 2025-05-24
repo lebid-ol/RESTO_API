@@ -2,6 +2,8 @@
 using BankAccounts.Exceptions;
 using BankAccounts.Records;
 using BankAccounts.Shared.Models;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
@@ -21,8 +23,10 @@ namespace BankAccounts.Repositories
     {
         private readonly MongoDbContext _mongoContext;
 
-        public AccountsRepository(MongoDbContext context)
+        public AccountsRepository(IConfiguration configuration, MongoDbContext context, IOptions<AzureSettingsOptions> options)
         {
+            var appName = configuration["AppName"];
+            var mongoOptions = options.Value;
             _mongoContext = context;
         }
 

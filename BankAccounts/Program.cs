@@ -4,15 +4,26 @@ using BankAccounts.AppplicationData.Repositories;
 using BankAccounts.Repositories;
 using BankAccounts.Services;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+
+Console.WriteLine("Curent ENV:" + env);
 // Add services to the container.
 var confiGbuilder = new ConfigurationBuilder()
+            .AddJsonFile($"appsettings.{env}.json", optional: true)
             .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
-var result = confiGbuilder.Build();
+
+
+confiGbuilder.Build();
+
+
+builder.Services.Configure<AzureSettingsOptions>(builder.Configuration.GetSection(AzureSettingsOptions.SectionName));
+builder.Services.Configure<MyOptions>(builder.Configuration.GetSection(MyOptions.SectionName));
 
 builder.Services.AddScoped<IAccountRepository, AccountsRepository>();
 builder.Services.AddScoped<IAccountService, AccountService>();
@@ -71,4 +82,5 @@ app.UseReDoc(options =>
     options.SpecUrl("/swagger/v1/swagger.json"); // OpenAPI spec location
     options.DocumentTitle = "My API Documentation";
 });
+
 app.Run();
