@@ -27,9 +27,6 @@ namespace BankAccounts.AppplicationData.Repositories
 
     public class UsersRepository : IUserRepository
     {
-        //private const string USER_ID_TRACKER = "userId.txt";
-
-        //private readonly IAccountRepository _accountRepository;
         private readonly MongoDbContext _mongoContext;
 
         public UsersRepository(
@@ -42,11 +39,8 @@ namespace BankAccounts.AppplicationData.Repositories
 
         public User AddUserRecord(User user)
         {
-            //var nextId = GetNextUserID();
-
             var userEntity = new UserEntity
             {
-               // UserId = nextId,
                 UserName = user.UserName,
                 Email = user.Email,
                 UserLastName = user.UserLastName,

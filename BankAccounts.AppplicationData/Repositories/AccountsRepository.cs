@@ -1,4 +1,5 @@
 ﻿using BankAccounts.AppplicationData.DbContext;
+using BankAccounts.AppplicationData.Records;
 using BankAccounts.Exceptions;
 using BankAccounts.Records;
 using BankAccounts.Shared.Models;
@@ -39,6 +40,7 @@ namespace BankAccounts.Repositories
                 CreatedDate = account.CreatedDate,
                 Balance = account.Balance,
                 OwnerUserId = account.OwnerUserId,
+     
             };
 
              _mongoContext.Accounts.InsertOne(accountEntity);

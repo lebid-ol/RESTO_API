@@ -22,10 +22,12 @@ namespace BankAccounts.API.Controllers
             _userService = userService;
         }
 
-        //GET: api/<UserController>
+        //GET: api/<UsersController>
         [HttpGet]
         public async Task<ActionResult<List<UserResponse>>> GetAllUsers()
         {
+            var requsetHeaders = Request.Headers;
+
             try
             {
                 var allUsers = await _userService.GetUsers();
@@ -41,12 +43,13 @@ namespace BankAccounts.API.Controllers
                         DateOfBirth = user.DateOfBirth,
                         Gender = user.Gender,
                         BillingAddress = user.BillingAddress
-                    };                    ;
+                       
+                    };                    
 
                     response.Add(userResponse);
                 }
 
-                return Ok(allUsers);
+                return Ok(response);
 
             }
             catch (NotFoundException ex)
@@ -65,13 +68,13 @@ namespace BankAccounts.API.Controllers
 
         // GET api/<UsersController>/5
         [HttpGet("{id}")]
-        public async Task <ActionResult<UserWithAccounts>> GetUserById([FromRoute] string id)
+        public async Task <ActionResult<UserResponse>> GetUserById([FromRoute] string id)
         {
             try
             {
-                var userWithAccounts = await _userService.GetUser(id);
+                var user = await _userService.GetUser(id);
                
-               /* var response = new UserResponse()
+               var response = new UserResponse()
                 {
                     UserName = user.UserName,
                     Email = user.Email,
@@ -80,10 +83,17 @@ namespace BankAccounts.API.Controllers
                     DateOfBirth = user.DateOfBirth,
                     Gender = user.Gender,
                     BillingAddress = user.BillingAddress,
-                                        
-                 };*/
+                    Accounts = user.Accounts.Select(account => new AccountResponse
+                    {
+                        Id = account.Id,
+                        AccountName = account.AccountName,
+                        AccountType = account.AccountType,
+                        Balance = account.Balance
+                    }).ToList()
 
-                return Ok(userWithAccounts);
+               };
+
+                return Ok(response);
             }
             catch (NotFoundException ex)
             {
@@ -99,7 +109,7 @@ namespace BankAccounts.API.Controllers
             }
         }
 
-        // POST api/<UserssController>
+        // POST api/<UsersController>
         [HttpPost]
         public async Task <ActionResult<UserResponse>> CreateUser([FromBody] UserRequest request)
         {
