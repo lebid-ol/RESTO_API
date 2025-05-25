@@ -1,6 +1,7 @@
 ﻿using BankAccounts.AppplicationData.Records;
 using BankAccounts.AppplicationData.Repositories;
 using BankAccounts.Records;
+using BankAccounts.Repositories;
 using BankAccounts.Shared.Models;
 
 namespace BankAccounts.Services
@@ -10,18 +11,20 @@ namespace BankAccounts.Services
         User AddUser(User userRequest);
         Task <User> GetUser(string id);
         Task <List <User>> GetUsers();
-        User UpdateUser(UpdateUser requets);
-        void DeleteUser(int id);
+        Task <User> UpdateUser(UpdateUser requets);
+        Task DeleteUser(string id);
 
     }
 
     public class UserService : IUserService
     {
         private readonly IUserRepository _usersRepository;
+        private readonly IAccountRepository _accountsRepository;
 
-        public UserService(IUserRepository usersRepository)
+        public UserService(IUserRepository usersRepository, IAccountRepository accountsRepository)
         {
             _usersRepository = usersRepository;
+            _accountsRepository = accountsRepository;
 
         }
 
@@ -51,13 +54,16 @@ namespace BankAccounts.Services
 
         }
 
-        public Task <User> GetUser(string id)
+        public async Task <User> GetUser(string id)
         {
 
-            var findUser = _usersRepository.GetOneUserFromData(id);
+            var user = await _usersRepository.GetOneUserFromData(id);
+            var accounts = await _accountsRepository.GetAllAccountsByOwnerId(id);
 
-            return findUser;
+            user.Accounts = accounts;
 
+            return user;
+           
         }
 
         public Task <List<User>> GetUsers()
@@ -68,28 +74,15 @@ namespace BankAccounts.Services
 
         }
 
-         public User UpdateUser(UpdateUser updatedUser)
+         public Task <User> UpdateUser(UpdateUser updatedUser)
         {
-           // var updatedUser = new UserEntity()
-            //{
-                //Id = id,
-                //Email = requests.Email,
-                //UserName = requests.UserName,
-                //UserLastName = requests.UserLastName,
-                //PhoneNumber = requests.PhoneNumber,
-                //DateOfBirth = requests.DateOfBirth,
-                //Gender = requests.Gender,
-                //BillingAddress = requests.BillingAddress
-
-           // };
-
             var user = _usersRepository.UpdateUserRecord(updatedUser);
             return user;
         }
 
-        public void DeleteUser(int id)
+        public Task DeleteUser(string id)
         {
-            _usersRepository.DeleteUserFromData(id);
+           return  _usersRepository.DeleteUserFromData(id);
         }
 
     }
