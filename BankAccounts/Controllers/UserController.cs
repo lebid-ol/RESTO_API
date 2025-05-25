@@ -36,6 +36,7 @@ namespace BankAccounts.API.Controllers
                 {
                     var userResponse = new UserResponse()
                     {
+                        Id = user.UserId,
                         UserName = user.UserName,
                         Email = user.Email,
                         UserLastName = user.UserLastName,
@@ -130,6 +131,7 @@ namespace BankAccounts.API.Controllers
 
                 var response = new UserResponse()
                 {
+                    Id = createdUser.UserId,
                     UserName = createdUser.UserName,
                     Gender = createdUser.Gender,
                     Email = createdUser.Email,
@@ -152,13 +154,13 @@ namespace BankAccounts.API.Controllers
 
         // PUT api/<UsersController>/5
         [HttpPut("{id}")]
-        public async Task <ActionResult<UserResponse>>UpdateUserById([FromRoute] string userId, [FromBody] UpdateUserRequest updateRequest)
+        public async Task <ActionResult<UserResponse>>UpdateUserById([FromRoute] string id, [FromBody] UpdateUserRequest updateRequest)
         {
             try
             {
                 var updateUser = new UpdateUser()
                 {
-                    UserId = userId,
+                    UserId = id,
                     UserName = updateRequest.UserName,
                     Email = updateRequest.Email,
                     UserLastName = updateRequest.UserLastName,
