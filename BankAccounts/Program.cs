@@ -29,6 +29,7 @@ builder.Services.AddScoped<IAccountRepository, AccountsRepository>();
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IUserRepository, UsersRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddHttpClient();
 
 builder.Services.AddSingleton<MongoDbContext>();
 
