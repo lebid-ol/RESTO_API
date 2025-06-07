@@ -18,7 +18,7 @@ namespace BankAccounts.Records
         [JsonConverter(typeof(JsonStringEnumConverter))]
         [BsonRepresentation(BsonType.String)]
         public AccountType AccountType { get; set; }
-
         public string OwnerUserId { get; set; }
+
     }
 }
