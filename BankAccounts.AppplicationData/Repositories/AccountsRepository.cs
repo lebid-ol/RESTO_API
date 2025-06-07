@@ -1,12 +1,15 @@
 ﻿using BankAccounts.AppplicationData.DbContext;
-using BankAccounts.AppplicationData.Records;
 using BankAccounts.Exceptions;
 using BankAccounts.Records;
 using BankAccounts.Shared.Models;
+using HttpClientApp;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Driver;
+
+
+
 
 namespace BankAccounts.Repositories
 {
@@ -23,12 +26,15 @@ namespace BankAccounts.Repositories
     public class AccountsRepository : IAccountRepository
     {
         private readonly MongoDbContext _mongoContext;
+        private readonly ICurrencyConverterService _currencyConverter;
 
-        public AccountsRepository(IConfiguration configuration, MongoDbContext context, IOptions<AzureSettingsOptions> options)
+
+        public AccountsRepository(IConfiguration configuration, MongoDbContext context, IOptions<AzureSettingsOptions> options, ICurrencyConverterService currencyConverter)
         {
             var appName = configuration["AppName"];
             var mongoOptions = options.Value;
             _mongoContext = context;
+            _currencyConverter = currencyConverter;
         }
 
         public Account AddAcountRecord(Account account)
@@ -67,6 +73,8 @@ namespace BankAccounts.Repositories
                     UpdateDate = accountEntity.UpdateDate
                 };
 
+                account.BalanceInEuro = await _currencyConverter.ConvertEurToCad(account.Balance);
+
                 return account;
             }
 
@@ -90,6 +98,8 @@ namespace BankAccounts.Repositories
                     CreatedDate = record.CreatedDate,
                     OwnerUserId = record.OwnerUserId,
                 };
+
+                account.BalanceInEuro = await _currencyConverter.ConvertEurToCad(account.Balance);
 
                 accountList.Add(account);
             }
@@ -124,6 +134,7 @@ namespace BankAccounts.Repositories
                         OwnerUserId = accountEntity.OwnerUserId,
                         UpdateDate = accountEntity.UpdateDate
                     };
+
 
                     return accountUpdate;
                 }
@@ -177,7 +188,9 @@ namespace BankAccounts.Repositories
                         OwnerUserId = item.OwnerUserId,
                         UpdateDate = item.UpdateDate
                     };
-                    
+
+                    account.BalanceInEuro = await _currencyConverter.ConvertEurToCad(account.Balance);
+
                     result.Add(account);
                 }
 
