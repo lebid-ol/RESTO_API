@@ -1,11 +1,13 @@
 ﻿using BankAccounts.Repositories;
+using BankAccounts.Shared.Clients.CurrencyConver;
 using BankAccounts.Shared.Models;
+using MongoDB.Driver;
 
 namespace BankAccounts.Services
 {
     public interface IAccountService
     {
-        Account AddAccount(Account accountRequest);
+        Task<Account> AddAccount(Account accountRequest);
         Task<Account> GetAccount(string id);
         Task<List<Account>> GetAccounts();
         Task<Account> UpdateAccount(UpdateAccount requets);
@@ -16,18 +18,20 @@ namespace BankAccounts.Services
     public class AccountService : IAccountService
     {
         private readonly IAccountRepository _accountsRepository;
+        private readonly ICurrencyConverterClient _currencyConverter;
 
-        public AccountService(IAccountRepository accountsRepository)
+        public AccountService(IAccountRepository accountsRepository, 
+            ICurrencyConverterClient currencyConverter)
         {
             _accountsRepository = accountsRepository;
-   
+            _currencyConverter = currencyConverter;
         }
 
-        public Account AddAccount(Account account)
+        public async Task<Account> AddAccount(Account account)
         {
             account.Balance = 100;
             account.CreatedDate = DateTime.Now;
-
+            account.BalanceInEuro = account.Balance * await _currencyConverter.GetCADRates();
             var createdAccount = _accountsRepository.AddAcountRecord(account);
 
             return createdAccount;
@@ -35,20 +39,28 @@ namespace BankAccounts.Services
 
         
 
-        public Task<Account> GetAccount(string id)
+        public async Task<Account> GetAccount(string id)
         {
            
-            var findAccount = _accountsRepository.GetOneAccountFromData(id);
-       
+            var findAccount = await _accountsRepository.GetOneAccountFromData(id);
+            findAccount.BalanceInEuro = findAccount.Balance * await _currencyConverter.GetCADRates();
+
+
             return findAccount;
 
         }
 
-        public Task<List<Account>> GetAccounts()
+        public async Task<List<Account>> GetAccounts()
         {
-            var findAllAccount = _accountsRepository.GetAllAccountsFromData();
+            var findAllAccount = await _accountsRepository.GetAllAccountsFromData();
 
-            
+            var rate = await _currencyConverter.GetCADRates();
+
+            foreach (var account in findAllAccount)
+            {
+                account.BalanceInEuro = account.Balance * rate;
+            }
+
             return findAllAccount;
 
         }

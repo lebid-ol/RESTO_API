@@ -2,7 +2,7 @@ using BankAccounts.AppplicationData.DbContext;
 using BankAccounts.AppplicationData.Repositories;
 using BankAccounts.Repositories;
 using BankAccounts.Services;
-using HttpClientApp;
+using BankAccounts.Shared.Clients.CurrencyConver;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
@@ -30,8 +30,10 @@ builder.Services.AddScoped<IAccountRepository, AccountsRepository>();
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IUserRepository, UsersRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddHttpClient<ICurrencyConverterService, CurrencyConverterService>();
-
+builder.Services.AddHttpClient<ICurrencyConverterClient, CurrencyConverterClient>(client =>
+{
+    client.BaseAddress = new Uri("https://api.exchangeratesapi.io");
+});
 
 builder.Services.AddSingleton<MongoDbContext>();
 

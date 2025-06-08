@@ -5,7 +5,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace HttpClientApp
+namespace BankAccounts.Shared.Clients.CurrencyConver
 {
     public class ExchangeRatesResponse
     {

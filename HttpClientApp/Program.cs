@@ -56,8 +56,3 @@ foreach (var item in bankResponse)
 var newJsonString = JsonSerializer.Serialize(bankResponse);
 Console.WriteLine(newJsonString);
 
-// my homework
-var responseRates = await httpClient.GetAsync("https://api.exchangeratesapi.io/v1/latest?access_key=d34c0f99a49d8015ce75d964e91c6d14&base=EUR&symbols=CAD");
-var ratesToJsonString = await responseRates.Content.ReadAsStringAsync();
-var bankResponseRates = JsonSerializer.Deserialize<ExchangeRatesResponse>(ratesToJsonString);
-Console.WriteLine($"Курс EUR → CAD: {bankResponseRates.Rates["CAD"]}");

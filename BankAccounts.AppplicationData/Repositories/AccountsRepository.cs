@@ -1,8 +1,8 @@
 ﻿using BankAccounts.AppplicationData.DbContext;
 using BankAccounts.Exceptions;
 using BankAccounts.Records;
+using BankAccounts.Shared.Clients.CurrencyConver;
 using BankAccounts.Shared.Models;
-using HttpClientApp;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using MongoDB.Bson;
@@ -26,10 +26,10 @@ namespace BankAccounts.Repositories
     public class AccountsRepository : IAccountRepository
     {
         private readonly MongoDbContext _mongoContext;
-        private readonly ICurrencyConverterService _currencyConverter;
+        private readonly ICurrencyConverterClient _currencyConverter;
 
 
-        public AccountsRepository(IConfiguration configuration, MongoDbContext context, IOptions<AzureSettingsOptions> options, ICurrencyConverterService currencyConverter)
+        public AccountsRepository(IConfiguration configuration, MongoDbContext context, IOptions<AzureSettingsOptions> options, ICurrencyConverterClient currencyConverter)
         {
             var appName = configuration["AppName"];
             var mongoOptions = options.Value;
@@ -73,8 +73,6 @@ namespace BankAccounts.Repositories
                     UpdateDate = accountEntity.UpdateDate
                 };
 
-                account.BalanceInEuro = await _currencyConverter.ConvertEurToCad(account.Balance);
-
                 return account;
             }
 
@@ -98,8 +96,6 @@ namespace BankAccounts.Repositories
                     CreatedDate = record.CreatedDate,
                     OwnerUserId = record.OwnerUserId,
                 };
-
-                account.BalanceInEuro = await _currencyConverter.ConvertEurToCad(account.Balance);
 
                 accountList.Add(account);
             }
@@ -189,7 +185,6 @@ namespace BankAccounts.Repositories
                         UpdateDate = item.UpdateDate
                     };
 
-                    account.BalanceInEuro = await _currencyConverter.ConvertEurToCad(account.Balance);
 
                     result.Add(account);
                 }
