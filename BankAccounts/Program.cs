@@ -1,12 +1,13 @@
-using System.Text.Json.Serialization;
 using BankAccounts.AppplicationData.DbContext;
 using BankAccounts.AppplicationData.Repositories;
 using BankAccounts.Repositories;
 using BankAccounts.Services;
+using BankAccounts.Shared.Clients.CurrencyConver;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
 using Scalar.AspNetCore;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,6 +30,11 @@ builder.Services.AddScoped<IAccountRepository, AccountsRepository>();
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IUserRepository, UsersRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddMemoryCache();
+builder.Services.AddHttpClient<ICurrencyConverterClient, CurrencyConverterClient>(client =>
+{
+    client.BaseAddress = new Uri("https://api.exchangeratesapi.io");
+});
 
 builder.Services.AddSingleton<MongoDbContext>();
 

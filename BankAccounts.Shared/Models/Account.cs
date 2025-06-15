@@ -9,5 +9,6 @@
         public int Balance { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime UpdateDate { get; set; }
+        public decimal? BalanceInEuro { get; set; }
     }
 }

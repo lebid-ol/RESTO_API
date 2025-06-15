@@ -44,7 +44,8 @@ namespace BankAccounts.Controllers
                         Id = account.Id,
                         AccountName = account.AccountName,
                         AccountType = account.AccountType,
-                        Balance = account.Balance
+                        Balance = account.Balance,
+                        BalanceEuro = account.BalanceInEuro
                     };
 
                     response.Add(accountResponse);
@@ -79,7 +80,8 @@ namespace BankAccounts.Controllers
                     Id = account.Id,
                     AccountName = account.AccountName,
                     AccountType = account.AccountType,
-                    Balance = account.Balance   
+                    Balance = account.Balance,
+                    BalanceEuro = account.BalanceInEuro
                 };
 
                 return Ok(response);
@@ -112,7 +114,7 @@ namespace BankAccounts.Controllers
                     OwnerUserId = request.OwnerUserId,
                 };
 
-                var createdAccount = _accountService.AddAccount(newAccount);
+                var createdAccount = await _accountService.AddAccount(newAccount);
 
                 var response = new AccountResponse()
                 {

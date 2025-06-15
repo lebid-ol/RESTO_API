@@ -9,5 +9,6 @@ namespace BankAccounts.ResponseModels
         public string AccountName { get; set; }
         public AccountType AccountType { get; set; }
         public int Balance { get; set; }
+        public decimal? BalanceEuro { get; set; }
     }
 }

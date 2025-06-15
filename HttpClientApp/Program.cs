@@ -55,3 +55,4 @@ foreach (var item in bankResponse)
 
 var newJsonString = JsonSerializer.Serialize(bankResponse);
 Console.WriteLine(newJsonString);
+
