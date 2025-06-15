@@ -30,6 +30,7 @@ builder.Services.AddScoped<IAccountRepository, AccountsRepository>();
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IUserRepository, UsersRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddMemoryCache();
 builder.Services.AddHttpClient<ICurrencyConverterClient, CurrencyConverterClient>(client =>
 {
     client.BaseAddress = new Uri("https://api.exchangeratesapi.io");
