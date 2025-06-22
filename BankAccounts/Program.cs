@@ -2,9 +2,8 @@ using BankAccounts.AppplicationData.DbContext;
 using BankAccounts.AppplicationData.Repositories;
 using BankAccounts.Repositories;
 using BankAccounts.Services;
+using BankAccounts.Shared.Cashe;
 using BankAccounts.Shared.Clients.CurrencyConver;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
 using Scalar.AspNetCore;
 using System.Text.Json.Serialization;
@@ -35,6 +34,13 @@ builder.Services.AddHttpClient<ICurrencyConverterClient, CurrencyConverterClient
 {
     client.BaseAddress = new Uri("https://api.exchangeratesapi.io");
 });
+
+builder.Services.AddHttpClient<IRedisCacheClient, RedisCacheClient>(client =>
+{
+    client.BaseAddress = new Uri("https://api.exchangeratesapi.io");
+});
+
+builder.Services.AddSingleton<IRedisCacheClient, RedisCacheClient>();
 
 builder.Services.AddSingleton<MongoDbContext>();
 

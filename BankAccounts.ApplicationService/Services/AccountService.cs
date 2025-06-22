@@ -1,4 +1,5 @@
 ﻿using BankAccounts.Repositories;
+using BankAccounts.Shared.Cashe;
 using BankAccounts.Shared.Clients.CurrencyConver;
 using BankAccounts.Shared.Models;
 using MongoDB.Driver;
@@ -19,19 +20,23 @@ namespace BankAccounts.Services
     {
         private readonly IAccountRepository _accountsRepository;
         private readonly ICurrencyConverterClient _currencyConverter;
+        private readonly IRedisCacheClient _redisCacheClient;
 
         public AccountService(IAccountRepository accountsRepository, 
-            ICurrencyConverterClient currencyConverter)
+            ICurrencyConverterClient currencyConverter, IRedisCacheClient cacheClient)
         {
             _accountsRepository = accountsRepository;
             _currencyConverter = currencyConverter;
+            _redisCacheClient = cacheClient;
         }
 
         public async Task<Account> AddAccount(Account account)
         {
             account.Balance = 100;
             account.CreatedDate = DateTime.Now;
-            account.BalanceInEuro = account.Balance * await _currencyConverter.GetCADRates();
+            var rate = await _redisCacheClient.GetCadRate();
+            account.BalanceInEuro = account.Balance * rate;
+
             var createdAccount = _accountsRepository.AddAcountRecord(account);
 
             return createdAccount;

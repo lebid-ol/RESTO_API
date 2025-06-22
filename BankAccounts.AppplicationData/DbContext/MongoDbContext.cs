@@ -20,7 +20,7 @@ namespace BankAccounts.AppplicationData.DbContext
 
 
             var client = new MongoClient(_azureSettings.MongoDBConnectionString);
-            _database = client.GetDatabase("bank_accounts");
+            _database = client.GetDatabase("docker_bank_accounts");
         }
 
         public IMongoCollection<AccountEntity> Accounts => _database.GetCollection<AccountEntity>(MyConstants.AccountsTable);
