@@ -1,12 +1,15 @@
 ﻿using BankAccounts.AppplicationData.DbContext;
-using BankAccounts.AppplicationData.Records;
 using BankAccounts.Exceptions;
 using BankAccounts.Records;
+using BankAccounts.Shared.Clients.CurrencyConver;
 using BankAccounts.Shared.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Driver;
+
+
+
 
 namespace BankAccounts.Repositories
 {
@@ -23,12 +26,15 @@ namespace BankAccounts.Repositories
     public class AccountsRepository : IAccountRepository
     {
         private readonly MongoDbContext _mongoContext;
+        private readonly ICurrencyConverterClient _currencyConverter;
 
-        public AccountsRepository(IConfiguration configuration, MongoDbContext context, IOptions<AzureSettingsOptions> options)
+
+        public AccountsRepository(IConfiguration configuration, MongoDbContext context, IOptions<AzureSettingsOptions> options, ICurrencyConverterClient currencyConverter)
         {
             var appName = configuration["AppName"];
             var mongoOptions = options.Value;
             _mongoContext = context;
+            _currencyConverter = currencyConverter;
         }
 
         public Account AddAcountRecord(Account account)
@@ -125,6 +131,7 @@ namespace BankAccounts.Repositories
                         UpdateDate = accountEntity.UpdateDate
                     };
 
+
                     return accountUpdate;
                 }
             }
@@ -177,7 +184,8 @@ namespace BankAccounts.Repositories
                         OwnerUserId = item.OwnerUserId,
                         UpdateDate = item.UpdateDate
                     };
-                    
+
+
                     result.Add(account);
                 }
 
