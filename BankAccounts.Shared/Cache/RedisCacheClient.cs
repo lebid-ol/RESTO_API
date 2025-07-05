@@ -25,7 +25,7 @@ namespace BankAccounts.Shared.Cashe
 
         public RedisCacheClient(HttpClient httpClient)
         { 
-           var connection = ConnectionMultiplexer.Connect("localhost:6379");
+           var connection = ConnectionMultiplexer.Connect("redis:6379");
             _database = connection.GetDatabase();
             _httpClient = httpClient;
         }
