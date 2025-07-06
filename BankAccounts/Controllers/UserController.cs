@@ -69,7 +69,7 @@ namespace BankAccounts.API.Controllers
 
         // GET api/<UsersController>/5
         [HttpGet("{id}")]
-        public async Task <ActionResult<UserResponse>> GetUserById([FromRoute] string id)
+        public async Task <ActionResult<UserResponse>> GetUserById([FromRoute] int id)
         {
             try
             {
@@ -154,7 +154,7 @@ namespace BankAccounts.API.Controllers
 
         // PUT api/<UsersController>/5
         [HttpPut("{id}")]
-        public async Task <ActionResult<UserResponse>>UpdateUserById([FromRoute] string id, [FromBody] UpdateUserRequest updateRequest)
+        public async Task <ActionResult<UserResponse>>UpdateUserById([FromRoute] int id, [FromBody] UpdateUserRequest updateRequest)
         {
             try
             {
@@ -200,7 +200,7 @@ namespace BankAccounts.API.Controllers
 
         // DELETE api/<UsersController>/5
         [HttpDelete("{id}")]
-        public async Task <ActionResult<string>> DeleteUserById([FromRoute] string id)
+        public async Task <ActionResult<string>> DeleteUserById([FromRoute] int id)
         {
             try
             {

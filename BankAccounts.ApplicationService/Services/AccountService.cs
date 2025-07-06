@@ -9,11 +9,11 @@ namespace BankAccounts.Services
     public interface IAccountService
     {
         Task<Account> AddAccount(Account accountRequest);
-        Task<Account> GetAccount(string id);
+        Task<Account> GetAccount(int id);
         Task<List<Account>> GetAccounts();
         Task<Account> UpdateAccount(UpdateAccount requets);
-        Task DeleteAccount(string id);
-        Task<List<Account>> GetAllUserAccounts(string ownerId);
+        Task DeleteAccount(int id);
+        Task<List<Account>> GetAllUserAccounts(int ownerId);
     }
 
     public class AccountService : IAccountService
@@ -44,7 +44,7 @@ namespace BankAccounts.Services
 
         
 
-        public async Task<Account> GetAccount(string id)
+        public async Task<Account> GetAccount(int id)
         {
            
             var findAccount = await _accountsRepository.GetOneAccountFromData(id);
@@ -78,12 +78,12 @@ namespace BankAccounts.Services
             return account;
         }
 
-        public Task DeleteAccount(string id)
+        public Task DeleteAccount(int id)
         {
             return  _accountsRepository.DeleteAccountFromData(id);
         }
 
-        public Task<List<Account>> GetAllUserAccounts(string ownerId)
+        public Task<List<Account>> GetAllUserAccounts(int ownerId)
         {
             return _accountsRepository.GetAllAccountsByOwnerId(ownerId);
         }

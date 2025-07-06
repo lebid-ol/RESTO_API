@@ -1,4 +1,4 @@
-﻿using BankAccounts.AppplicationData.DbContext;
+﻿using BankAccounts.AppplicationData.Db;
 using BankAccounts.Exceptions;
 using BankAccounts.RequestModel;
 using BankAccounts.ResponseModels;
@@ -69,7 +69,7 @@ namespace BankAccounts.Controllers
 
         // GET api/<AccountsController>/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<AccountResponse>> GetAccountById([FromRoute] string id)
+        public async Task<ActionResult<AccountResponse>> GetAccountById([FromRoute] int id)
         {
             try
             {
@@ -134,7 +134,7 @@ namespace BankAccounts.Controllers
 
         // PUT api/<AccountsController>/5
         [HttpPut("{id}")]
-        public async Task<ActionResult<AccountResponse>> UpdateAccountById([FromRoute] string id, [FromBody] UpdateAccountRequets updateRequest)
+        public async Task<ActionResult<AccountResponse>> UpdateAccountById([FromRoute] int id, [FromBody] UpdateAccountRequets updateRequest)
         {
             try
             {
@@ -172,7 +172,7 @@ namespace BankAccounts.Controllers
 
         // DELETE api/<AccountsController>/5
         [HttpDelete("{id}")]
-        public async Task<ActionResult<string>> DeleteAccountById([FromRoute] string id)
+        public async Task<ActionResult<string>> DeleteAccountById([FromRoute] int id)
         {
             try
             {

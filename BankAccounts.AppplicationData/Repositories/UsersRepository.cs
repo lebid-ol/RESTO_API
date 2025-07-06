@@ -5,7 +5,7 @@ using System.Runtime.ConstrainedExecution;
 using static BankAccounts.Shared.Models.GenderType;
 using BankAccounts.Shared.Models;
 using BankAccounts.Repositories;
-using BankAccounts.AppplicationData.DbContext;
+using BankAccounts.AppplicationData.Db;
 using BankAccounts.Records;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
@@ -17,10 +17,10 @@ namespace BankAccounts.AppplicationData.Repositories
     public interface IUserRepository
     {
         User AddUserRecord(User users);
-        Task <User> GetOneUserFromData(string userId);
+        Task <User> GetOneUserFromData(int userId);
         Task <List<User>> GetAllUsersFromData();
         Task <User> UpdateUserRecord(UpdateUser user);
-        Task DeleteUserFromData(string userId);
+        Task DeleteUserFromData(int userId);
        
         
     }
@@ -51,15 +51,15 @@ namespace BankAccounts.AppplicationData.Repositories
 
             _mongoContext.Users.InsertOne(userEntity);
 
-            user.UserId = userEntity.UserId;
+            user.UserId = userEntity.Id;
             return user;
         }
 
 
-           public async Task <User> GetOneUserFromData(string userId)
+           public async Task <User> GetOneUserFromData(int userId)
           {
              
-            var taskResult = await _mongoContext.Users.FindAsync(x => x.UserId == userId);
+            var taskResult = await _mongoContext.Users.FindAsync(x => x.Id == userId);
             var userEntity = taskResult.FirstOrDefault();
 
             if (userEntity != null)
@@ -93,7 +93,7 @@ namespace BankAccounts.AppplicationData.Repositories
             {
                 var user = new User()
                 {
-                    UserId = record.UserId,
+                    UserId = record.Id,
                     UserName = record.UserName,
                     Email = record.Email,
                     UserLastName = record.UserLastName,
@@ -113,7 +113,7 @@ namespace BankAccounts.AppplicationData.Repositories
 
         public async Task <User> UpdateUserRecord(UpdateUser user)
         {
-            var filter = Builders<UserEntity>.Filter.Eq(x => x.UserId, user.UserId);
+            var filter = Builders<UserEntity>.Filter.Eq(x => x.Id, user.UserId);
 
             var update = Builders<UserEntity>.Update
                 .Set(x => x.UserName, user.UserName)
@@ -127,14 +127,14 @@ namespace BankAccounts.AppplicationData.Repositories
 
             if (updateResult.ModifiedCount == 1)
             {
-                var taskResult = await _mongoContext.Users.FindAsync(x => x.UserId == user.UserId);
+                var taskResult = await _mongoContext.Users.FindAsync(x => x.Id == user.UserId);
                 var userEntity = taskResult.FirstOrDefault();
 
                 if (userEntity != null)
                 {
                     var userUpdate = new User()
                     {
-                        UserId = userEntity.UserId,
+                        UserId = userEntity.Id,
                         UserName = userEntity.UserName,
                         Email = userEntity.Email,
                         UserLastName = userEntity.UserLastName,
@@ -157,9 +157,9 @@ namespace BankAccounts.AppplicationData.Repositories
             
         }
 
-        public async Task DeleteUserFromData(string userId)
+        public async Task DeleteUserFromData(int userId)
         {
-            var deleteResult = await _mongoContext.Users.DeleteOneAsync(x => x.UserId == userId);
+            var deleteResult = await _mongoContext.Users.DeleteOneAsync(x => x.Id == userId);
 
             if (deleteResult.DeletedCount == 1)
             {

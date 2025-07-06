@@ -1,9 +1,11 @@
-using BankAccounts.AppplicationData.DbContext;
+using BankAccounts.AppplicationData.Db;
 using BankAccounts.AppplicationData.Repositories;
 using BankAccounts.Repositories;
 using BankAccounts.Services;
 using BankAccounts.Shared.Cashe;
 using BankAccounts.Shared.Clients.CurrencyConver;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.OpenApi.Models;
 using Scalar.AspNetCore;
 using System.Text.Json.Serialization;
@@ -21,9 +23,15 @@ var confiGbuilder = new ConfigurationBuilder()
 
 confiGbuilder.Build();
 
+builder.Services.AddDbContext<PostgresDbContext>(o =>
+{
+    var connectionString = builder.Configuration["ConnectionStrings:PostgreSQL"];
+    o.UseNpgsql(connectionString);
+});
 
-builder.Services.Configure<AzureSettingsOptions>(builder.Configuration.GetSection(AzureSettingsOptions.SectionName));
-builder.Services.Configure<MyOptions>(builder.Configuration.GetSection(MyOptions.SectionName));
+
+//builder.Services.Configure<AzureSettingsOptions>(builder.Configuration.GetSection(AzureSettingsOptions.SectionName));
+//builder.Services.Configure<MyOptions>(builder.Configuration.GetSection(MyOptions.SectionName));
 
 builder.Services.AddScoped<IAccountRepository, AccountsRepository>();
 builder.Services.AddScoped<IAccountService, AccountService>();
@@ -42,7 +50,7 @@ builder.Services.AddHttpClient<IRedisCacheClient, RedisCacheClient>(client =>
 
 builder.Services.AddSingleton<IRedisCacheClient, RedisCacheClient>();
 
-builder.Services.AddSingleton<MongoDbContext>();
+//builder.Services.AddSingleton<MongoDbContext>();
 
 //Add automapper
 //builder.Services.AddAutoMapper(typeof(Program));

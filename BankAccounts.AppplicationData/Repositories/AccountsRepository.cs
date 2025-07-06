@@ -1,4 +1,4 @@
-﻿using BankAccounts.AppplicationData.DbContext;
+﻿using BankAccounts.AppplicationData.Db;
 using BankAccounts.Exceptions;
 using BankAccounts.Records;
 using BankAccounts.Shared.Clients.CurrencyConver;
@@ -16,11 +16,11 @@ namespace BankAccounts.Repositories
     public interface IAccountRepository
     {
         Account AddAcountRecord(Account accounts);
-        Task<Account> GetOneAccountFromData(string accountId);
+        Task<Account> GetOneAccountFromData(int accountId);
         Task<List<Account>> GetAllAccountsFromData();
         Task<Account> UpdateAccountRecord(UpdateAccount account);
-        Task DeleteAccountFromData(string accountId);
-        Task<List<Account>> GetAllAccountsByOwnerId(string ownerId);
+        Task DeleteAccountFromData(int accountId);
+        Task<List<Account>> GetAllAccountsByOwnerId(int ownerId);
     }
 
     public class AccountsRepository : IAccountRepository
@@ -55,7 +55,7 @@ namespace BankAccounts.Repositories
             return account;
         }
 
-        public async Task<Account> GetOneAccountFromData(string accountId)
+        public async Task<Account> GetOneAccountFromData(int accountId)
         {
             var taskResult = await _mongoContext.Accounts.FindAsync(x => x.Id == accountId);
             var accountEntity = taskResult.FirstOrDefault();
@@ -145,7 +145,7 @@ namespace BankAccounts.Repositories
             throw new NotFoundException("No account records found");
         }
 
-        public async Task DeleteAccountFromData(string accountId)
+        public async Task DeleteAccountFromData(int accountId)
         {
             var  deleteResult = await _mongoContext.Accounts.DeleteOneAsync(x => x.Id == accountId);
 
@@ -163,7 +163,7 @@ namespace BankAccounts.Repositories
             throw new NotFoundException("No account records found");
         }
 
-        public async Task<List<Account>> GetAllAccountsByOwnerId(string ownerId)
+        public async Task<List<Account>> GetAllAccountsByOwnerId(int ownerId)
         {
             var taskResult = await _mongoContext.Accounts.FindAsync(x => x.OwnerUserId == ownerId);
             var accountEntity = taskResult.ToList();

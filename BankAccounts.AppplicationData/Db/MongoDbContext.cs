@@ -7,7 +7,7 @@ using System.Net;
 using Microsoft.Extensions.Options;
 
 
-namespace BankAccounts.AppplicationData.DbContext
+namespace BankAccounts.AppplicationData.Db
 {
     public class MongoDbContext
     {

@@ -9,10 +9,10 @@ namespace BankAccounts.Services
     public interface IUserService
     {
         User AddUser(User userRequest);
-        Task <User> GetUser(string id);
+        Task <User> GetUser(int id);
         Task <List <User>> GetUsers();
         Task <User> UpdateUser(UpdateUser requets);
-        Task DeleteUser(string id);
+        Task DeleteUser(int id);
 
     }
 
@@ -54,7 +54,7 @@ namespace BankAccounts.Services
 
         }
 
-        public async Task <User> GetUser(string id)
+        public async Task <User> GetUser(int id)
         {
 
             var user = await _usersRepository.GetOneUserFromData(id);
@@ -80,7 +80,7 @@ namespace BankAccounts.Services
             return user;
         }
 
-        public Task DeleteUser(string id)
+        public Task DeleteUser(int id)
         {
            return  _usersRepository.DeleteUserFromData(id);
         }
