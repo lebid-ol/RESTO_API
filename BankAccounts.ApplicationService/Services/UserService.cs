@@ -10,7 +10,7 @@ namespace BankAccounts.Services
     {
         Task<User> AddUser(User userRequest);
         Task <User> GetUser(int id);
-        List <User> GetUsers();
+        Task<List<User>> GetUsers();
         Task <User> UpdateUser(UpdateUser requets);
         Task DeleteUser(int id);
 
@@ -66,9 +66,9 @@ namespace BankAccounts.Services
            
         }
 
-        public List<User> GetUsers()
+        public async Task<List<User>> GetUsers()
         {
-            var findAllUser = _usersRepository.GetAllUsersFromData();
+            var findAllUser = await _usersRepository.GetAllUsersFromData();
 
             return findAllUser;
 

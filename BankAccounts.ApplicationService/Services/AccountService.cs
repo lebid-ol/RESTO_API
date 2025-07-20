@@ -58,7 +58,7 @@ namespace BankAccounts.Services
 
         public async Task<List<Account>> GetAccounts()
         {
-            var findAllAccount = _accountsRepository.GetAllAccountsFromData();
+            var findAllAccount = await _accountsRepository.GetAllAccountsFromData();
 
             var rate = await _currencyConverter.GetCADRates();
 

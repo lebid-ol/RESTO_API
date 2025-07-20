@@ -2,6 +2,7 @@
 using BankAccounts.Exceptions;
 using BankAccounts.Records;
 using BankAccounts.Shared.Models;
+using Microsoft.EntityFrameworkCore;
 using MongoDB.Driver;
 
 
@@ -13,7 +14,7 @@ namespace BankAccounts.Repositories
     {
         Task<Account> AddAcountRecord(Account accounts);
         Task<Account> GetOneAccountFromData(int accountId);
-        List<Account> GetAllAccountsFromData();
+        Task<List<Account>> GetAllAccountsFromData();
         Task<Account> UpdateAccountRecord(UpdateAccount account);
         Task DeleteAccountFromData(int accountId);
         Task<List<Account>> GetAllAccountsByOwnerId(int ownerId);
@@ -70,9 +71,9 @@ namespace BankAccounts.Repositories
             throw new NotFoundException("No account records found");
         }
 
-        public  List<Account> GetAllAccountsFromData()
+        public async Task<List<Account>> GetAllAccountsFromData()
         {
-            var accounts = _postgresDbContext.Accounts.ToList();
+            var accounts = await _postgresDbContext.Accounts.ToListAsync();
 
             var accountList = new List<Account>();
 

@@ -30,7 +30,7 @@ namespace BankAccounts.API.Controllers
 
             try
             {
-                var allUsers = _userService.GetUsers();
+                var allUsers = await _userService.GetUsers();
                 var response = new List<UserResponse>();
                 foreach (var user in allUsers)
                 {

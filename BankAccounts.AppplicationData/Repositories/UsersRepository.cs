@@ -1,17 +1,9 @@
 ﻿using BankAccounts.Exceptions;
-using System.Globalization;
 using BankAccounts.AppplicationData.Records;
-using System.Runtime.ConstrainedExecution;
-using static BankAccounts.Shared.Models.GenderType;
 using BankAccounts.Shared.Models;
-using BankAccounts.Repositories;
 using BankAccounts.AppplicationData.Db;
-using BankAccounts.Records;
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
-using System.Text.Json.Serialization;
 using MongoDB.Driver;
-using System.Data.Entity;
+using Microsoft.EntityFrameworkCore;
 
 namespace BankAccounts.AppplicationData.Repositories
 {
@@ -19,7 +11,7 @@ namespace BankAccounts.AppplicationData.Repositories
     {
         Task<User> AddUserRecord(User users);
         Task <User> GetOneUserFromData(int userId);
-        List<User> GetAllUsersFromData();
+        Task<List<User>> GetAllUsersFromData();
         Task <User> UpdateUserRecord(UpdateUser user);
         Task DeleteUserFromData(int userId);
        
@@ -80,9 +72,9 @@ namespace BankAccounts.AppplicationData.Repositories
         }
 
 
-        public List<User> GetAllUsersFromData()
+        public async Task<List<User>> GetAllUsersFromData()
         {
-            var users = _postgresContext.Users.ToList();
+            var users = await _postgresContext.Users.ToListAsync();
 
             var userList = new List<User>();
 
