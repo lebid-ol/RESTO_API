@@ -1,11 +1,7 @@
 ﻿using BankAccounts.AppplicationData.Db;
 using BankAccounts.Exceptions;
 using BankAccounts.Records;
-using BankAccounts.Shared.Clients.CurrencyConver;
 using BankAccounts.Shared.Models;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Options;
-using MongoDB.Bson;
 using MongoDB.Driver;
 
 
@@ -15,9 +11,9 @@ namespace BankAccounts.Repositories
 {
     public interface IAccountRepository
     {
-        Account AddAcountRecord(Account accounts);
+        Task<Account> AddAcountRecord(Account accounts);
         Task<Account> GetOneAccountFromData(int accountId);
-        Task<List<Account>> GetAllAccountsFromData();
+        List<Account> GetAllAccountsFromData();
         Task<Account> UpdateAccountRecord(UpdateAccount account);
         Task DeleteAccountFromData(int accountId);
         Task<List<Account>> GetAllAccountsByOwnerId(int ownerId);
@@ -25,19 +21,15 @@ namespace BankAccounts.Repositories
 
     public class AccountsRepository : IAccountRepository
     {
-        private readonly MongoDbContext _mongoContext;
-        private readonly ICurrencyConverterClient _currencyConverter;
+        private readonly PostgresDbContext _postgresDbContext;
 
 
-        public AccountsRepository(IConfiguration configuration, MongoDbContext context, IOptions<AzureSettingsOptions> options, ICurrencyConverterClient currencyConverter)
+        public AccountsRepository(PostgresDbContext postgresDbContext)
         {
-            var appName = configuration["AppName"];
-            var mongoOptions = options.Value;
-            _mongoContext = context;
-            _currencyConverter = currencyConverter;
+            _postgresDbContext = postgresDbContext;
         }
 
-        public Account AddAcountRecord(Account account)
+        public async Task<Account> AddAcountRecord(Account account)
         {
             var accountEntity = new AccountEntity
             {
@@ -45,11 +37,12 @@ namespace BankAccounts.Repositories
                 AccountType = account.AccountType,
                 CreatedDate = account.CreatedDate,
                 Balance = account.Balance,
-                OwnerUserId = account.OwnerUserId,
+                UpdateDate = account.UpdateDate
      
             };
 
-             _mongoContext.Accounts.InsertOne(accountEntity);
+            _postgresDbContext.Accounts.Add(accountEntity);
+            await _postgresDbContext.SaveChangesAsync();
 
             account.Id = accountEntity.Id;
             return account;
@@ -57,8 +50,7 @@ namespace BankAccounts.Repositories
 
         public async Task<Account> GetOneAccountFromData(int accountId)
         {
-            var taskResult = await _mongoContext.Accounts.FindAsync(x => x.Id == accountId);
-            var accountEntity = taskResult.FirstOrDefault();
+            var accountEntity = await _postgresDbContext.Accounts.FindAsync(accountId);
 
             if (accountEntity != null) 
             {
@@ -69,7 +61,6 @@ namespace BankAccounts.Repositories
                     Balance = accountEntity.Balance,
                     CreatedDate = accountEntity.CreatedDate,
                     Id = accountEntity.Id,
-                    OwnerUserId = accountEntity.OwnerUserId,
                     UpdateDate = accountEntity.UpdateDate
                 };
 
@@ -79,13 +70,13 @@ namespace BankAccounts.Repositories
             throw new NotFoundException("No account records found");
         }
 
-        public async Task<List<Account>> GetAllAccountsFromData()
+        public  List<Account> GetAllAccountsFromData()
         {
-            var documents = await _mongoContext.Accounts.Find(new BsonDocument()).ToListAsync();
+            var accounts = _postgresDbContext.Accounts.ToList();
 
             var accountList = new List<Account>();
 
-            foreach (var record in documents)
+            foreach (var record in accounts)
             {
                 var account = new Account()
                 {
@@ -94,7 +85,6 @@ namespace BankAccounts.Repositories
                     AccountType = record.AccountType,
                     Balance = record.Balance,
                     CreatedDate = record.CreatedDate,
-                    OwnerUserId = record.OwnerUserId,
                 };
 
                 accountList.Add(account);
@@ -105,94 +95,46 @@ namespace BankAccounts.Repositories
 
         public async Task<Account> UpdateAccountRecord(UpdateAccount account)
         {
-            var filter = Builders<AccountEntity>.Filter.Eq(x => x.Id, account.Id);
+            var accountToUpdate = await _postgresDbContext.Accounts.FindAsync(account.Id);
 
-            var update = Builders<AccountEntity>.Update
-                .Set(x => x.AccountName, account.AccountName)
-                .Set(x => x.UpdateDate, account.UpdateDate);
-
-            var updateResult = await _mongoContext.Accounts.UpdateOneAsync(filter, update);
-
-            if (updateResult.ModifiedCount == 1)
+            if (accountToUpdate == null)
             {
-                var taskResult = await _mongoContext.Accounts.FindAsync(x => x.Id == account.Id);
-                var accountEntity = taskResult.FirstOrDefault();
-
-                if (accountEntity != null)
-                {
-                    var accountUpdate = new Account()
-                    {
-                        AccountName = accountEntity.AccountName,
-                        AccountType = accountEntity.AccountType,
-                        Balance = accountEntity.Balance,
-                        CreatedDate = accountEntity.CreatedDate,
-                        Id = accountEntity.Id,
-                        OwnerUserId = accountEntity.OwnerUserId,
-                        UpdateDate = accountEntity.UpdateDate
-                    };
-
-
-                    return accountUpdate;
-                }
+                throw new NotFoundException("Account not found");
             }
 
-            if (updateResult.ModifiedCount > 1)
-            {
-                Console.WriteLine("MEssage to developer");
-                throw new Exception("Developer exception");
-            }
+            accountToUpdate.AccountName = account.AccountName;
+            accountToUpdate.UpdateDate = account.UpdateDate;
 
-            throw new NotFoundException("No account records found");
+            await _postgresDbContext.SaveChangesAsync();
+
+            return new Account
+            {
+                AccountName = accountToUpdate.AccountName,
+                AccountType = accountToUpdate.AccountType,
+                Balance = accountToUpdate.Balance,
+                CreatedDate = accountToUpdate.CreatedDate,
+                Id = accountToUpdate.Id,
+                UpdateDate = accountToUpdate.UpdateDate
+            };
         }
 
         public async Task DeleteAccountFromData(int accountId)
         {
-            var  deleteResult = await _mongoContext.Accounts.DeleteOneAsync(x => x.Id == accountId);
+            var accountToDelete = await _postgresDbContext.Accounts.FindAsync(accountId);
 
-            if (deleteResult.DeletedCount == 1)
+            if (accountToDelete == null) 
             {
-                return;
+                throw new NotFoundException("Account not found");
             }
 
-            if (deleteResult.DeletedCount > 1)
-            {
-                Console.WriteLine("MEssage to developer");
-                throw new Exception("Developer exception");
-            }
+            _postgresDbContext.Accounts.Remove(accountToDelete);
 
-            throw new NotFoundException("No account records found");
+            await _postgresDbContext.SaveChangesAsync();
         }
 
         public async Task<List<Account>> GetAllAccountsByOwnerId(int ownerId)
         {
-            var taskResult = await _mongoContext.Accounts.FindAsync(x => x.OwnerUserId == ownerId);
-            var accountEntity = taskResult.ToList();
-
-            if (accountEntity.Any())
-            {
-                var result = new List<Account>();
-
-                foreach (var item in accountEntity)
-                {
-                    var account = new Account()
-                    {
-                        AccountName = item.AccountName,
-                        AccountType = item.AccountType,
-                        Balance = item.Balance,
-                        CreatedDate = item.CreatedDate,
-                        Id = item.Id,
-                        OwnerUserId = item.OwnerUserId,
-                        UpdateDate = item.UpdateDate
-                    };
-
-
-                    result.Add(account);
-                }
-
-                return result;
-            }
-
-            throw new NotFoundException("No account records found");
+            throw new NotImplementedException();
         }
     }
 }

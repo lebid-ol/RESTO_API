@@ -30,7 +30,7 @@ namespace BankAccounts.API.Controllers
 
             try
             {
-                var allUsers = await _userService.GetUsers();
+                var allUsers = _userService.GetUsers();
                 var response = new List<UserResponse>();
                 foreach (var user in allUsers)
                 {
@@ -127,7 +127,7 @@ namespace BankAccounts.API.Controllers
                     BillingAddress = request.BillingAddress 
                 };
 
-                var createdUser = _userService.AddUser(newUser);
+                var createdUser = await _userService.AddUser(newUser);
 
                 var response = new UserResponse()
                 {
@@ -174,6 +174,7 @@ namespace BankAccounts.API.Controllers
 
                 var response = new UserResponse()
                 {
+                    Id = updatedUser.UserId,
                     UserName = updateUser.UserName,
                     Email = updateUser.Email,
                     UserLastName = updateUser.UserLastName,

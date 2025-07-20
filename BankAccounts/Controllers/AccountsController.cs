@@ -15,16 +15,18 @@ namespace BankAccounts.Controllers
     public class AccountsController : ControllerBase
     {
         private readonly IAccountService _accountService;
+        private readonly PostgresDbContext _context;
 
         public AccountsController(
             IAccountService accountService,
             IOptions<AzureSettingsOptions> azureOptions,
+            PostgresDbContext context,
             IOptions<MyOptions> myOptions)
         {
             _accountService = accountService;
             var azureSettings = azureOptions.Value;
             var mySettings = myOptions.Value;
-            Console.WriteLine();
+            _context = context;
         }
 
         // GET: api/<AccountsController>

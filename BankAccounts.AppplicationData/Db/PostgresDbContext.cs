@@ -8,9 +8,18 @@ namespace BankAccounts.AppplicationData.Db
     {
         public PostgresDbContext(DbContextOptions<PostgresDbContext> options) : base(options) { }
 
-
         public DbSet<UserEntity> Users { get; set; }
         public DbSet<AccountEntity> Accounts { get; set; }
         public DbSet<TransactionsEntity> Transactions { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<UserEntity>()
+                .HasMany(user => user.Accounts)
+                .WithOne(account => account.User)
+                .HasForeignKey(account => account.UserId);
+
+            base.OnModelCreating(modelBuilder);
+        }
     }
 }

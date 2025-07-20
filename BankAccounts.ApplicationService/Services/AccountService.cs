@@ -33,11 +33,12 @@ namespace BankAccounts.Services
         public async Task<Account> AddAccount(Account account)
         {
             account.Balance = 100;
-            account.CreatedDate = DateTime.Now;
+            account.CreatedDate = DateTime.UtcNow;
+            account.UpdateDate = DateTime.UtcNow;
             var rate = await _redisCacheClient.GetCadRate();
             account.BalanceInEuro = account.Balance * rate;
 
-            var createdAccount = _accountsRepository.AddAcountRecord(account);
+            var createdAccount = await _accountsRepository.AddAcountRecord(account);
 
             return createdAccount;
         }
@@ -57,7 +58,7 @@ namespace BankAccounts.Services
 
         public async Task<List<Account>> GetAccounts()
         {
-            var findAllAccount = await _accountsRepository.GetAllAccountsFromData();
+            var findAllAccount = _accountsRepository.GetAllAccountsFromData();
 
             var rate = await _currencyConverter.GetCADRates();
 
@@ -72,7 +73,7 @@ namespace BankAccounts.Services
 
         public Task<Account> UpdateAccount(UpdateAccount updatedAccount)
         {
-            updatedAccount.UpdateDate = DateTime.Now;
+            updatedAccount.UpdateDate = DateTime.UtcNow;
 
             var account = _accountsRepository.UpdateAccountRecord(updatedAccount);
             return account;

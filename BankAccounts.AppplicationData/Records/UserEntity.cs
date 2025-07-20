@@ -2,6 +2,7 @@
 using MongoDB.Bson;
 using static BankAccounts.Shared.Models.GenderType;
 using System.Text.Json.Serialization;
+using BankAccounts.Records;
 
 namespace BankAccounts.AppplicationData.Records
 {
@@ -16,5 +17,8 @@ namespace BankAccounts.AppplicationData.Records
         public Gender Gender { get; set; }
         public string BillingAddress { get; set; }
         public string BillingCity { get; set; } = "New York";
+
+        // Navigation property
+        public List<AccountEntity> Accounts { get; set; }
     }
 }

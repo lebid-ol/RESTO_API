@@ -2,6 +2,7 @@
 using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Bson;
 using System.Text.Json.Serialization;
+using BankAccounts.AppplicationData.Records;
 
 namespace BankAccounts.Records
 {
@@ -13,7 +14,12 @@ namespace BankAccounts.Records
         public DateTime UpdateDate { get; set; }
         public string AccountName { get; set; }
         public AccountType AccountType { get; set; }
-        public int OwnerUserId { get; set; }
+
+        // Foreign key
+        public int UserId { get; set; }
+
+        // Navigation property
+        public UserEntity User {  get; set; }
 
     }
 }

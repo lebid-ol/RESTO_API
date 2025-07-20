@@ -8,9 +8,9 @@ namespace BankAccounts.Services
 {
     public interface IUserService
     {
-        User AddUser(User userRequest);
+        Task<User> AddUser(User userRequest);
         Task <User> GetUser(int id);
-        Task <List <User>> GetUsers();
+        List <User> GetUsers();
         Task <User> UpdateUser(UpdateUser requets);
         Task DeleteUser(int id);
 
@@ -28,7 +28,7 @@ namespace BankAccounts.Services
 
         }
 
-        public User AddUser(User user)
+        public Task<User> AddUser(User user)
         {
             var createdUser = _usersRepository.AddUserRecord(user);
 
@@ -66,7 +66,7 @@ namespace BankAccounts.Services
            
         }
 
-        public Task <List<User>> GetUsers()
+        public List<User> GetUsers()
         {
             var findAllUser = _usersRepository.GetAllUsersFromData();
 
