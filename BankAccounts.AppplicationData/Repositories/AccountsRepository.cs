@@ -51,7 +51,8 @@ namespace BankAccounts.Repositories
 
         public async Task<Account> GetOneAccountFromData(int accountId)
         {
-            var accountEntity = await _postgresDbContext.Accounts.FindAsync(accountId);
+            var accountEntity = _postgresDbContext.Accounts
+                .SingleOrDefault(x => x.Id == accountId);
 
             if (accountEntity != null) 
             {

@@ -50,7 +50,25 @@ namespace BankAccounts.AppplicationData.Repositories
 
         public async Task <User> GetOneUserFromData(int userId)
         {
-            var userEntity = await _postgresContext.Users.FindAsync(userId);
+            var userEntity = await _postgresContext.Users
+                .Include(x => x.Accounts)
+                .FirstOrDefaultAsync(x => x.Id == userId);
+
+            var accountList = new List<Account>();
+
+            foreach (var record in userEntity.Accounts)
+            {
+                var account = new Account()
+                {
+                    Id = record.Id,
+                    AccountName = record.AccountName,
+                    AccountType = record.AccountType,
+                    Balance = record.Balance,
+                    CreatedDate = record.CreatedDate,
+                };
+
+                accountList.Add(account);
+            }
 
             if (userEntity != null)
             {
@@ -62,7 +80,7 @@ namespace BankAccounts.AppplicationData.Repositories
                     PhoneNumber = userEntity.PhoneNumber,
                     DateOfBirth = userEntity.DateOfBirth,
                     BillingAddress = userEntity.BillingAddress,
-
+                    Accounts = accountList
                 };
 
                 return user;

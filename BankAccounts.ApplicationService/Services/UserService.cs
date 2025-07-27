@@ -58,9 +58,6 @@ namespace BankAccounts.Services
         {
 
             var user = await _usersRepository.GetOneUserFromData(id);
-            var accounts = await _accountsRepository.GetAllAccountsByOwnerId(id);
-
-            user.Accounts = accounts;
 
             return user;
            
