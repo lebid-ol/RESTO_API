@@ -1,10 +1,10 @@
 ﻿using BankAccounts.AppplicationData.Db;
+using BankAccounts.AppplicationData.Records;
 using BankAccounts.Exceptions;
 using BankAccounts.Records;
 using BankAccounts.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using MongoDB.Driver;
-
 
 
 
@@ -51,8 +51,26 @@ namespace BankAccounts.Repositories
 
         public async Task<Account> GetOneAccountFromData(int accountId)
         {
-            var accountEntity = _postgresDbContext.Accounts
-                .SingleOrDefault(x => x.Id == accountId);
+            var accountEntity = await _postgresDbContext.Accounts
+                .Include(x => x.Transactions)
+                .FirstOrDefaultAsync(x => x.Id == accountId);
+
+            var transactionsList = new List<Transaction>();
+
+            foreach (var record in accountEntity.Transactions)
+            {
+                var transaction = new Transaction()
+                {
+                    Id = record.Id,
+                    TransactionName = record.TransactionName,
+                    Description = record.Description,
+                    AmountTransaction = record.AmountTransaction,
+                    Created = record.Created,
+                };
+
+                transactionsList.Add(transaction);
+            }
+
 
             if (accountEntity != null) 
             {

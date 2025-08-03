@@ -30,6 +30,12 @@ namespace BankAccounts.AppplicationData.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("AccountId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("AmountTransaction")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("Created")
                         .HasColumnType("timestamp with time zone");
 
@@ -37,11 +43,13 @@ namespace BankAccounts.AppplicationData.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("Name")
+                    b.Property<string>("TransactionName")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AccountId");
 
                     b.ToTable("Transactions");
                 });
@@ -123,6 +131,17 @@ namespace BankAccounts.AppplicationData.Migrations
                     b.ToTable("Accounts");
                 });
 
+            modelBuilder.Entity("BankAccounts.AppplicationData.Records.TransactionsEntity", b =>
+                {
+                    b.HasOne("BankAccounts.Records.AccountEntity", "Account")
+                        .WithMany("Transactions")
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Account");
+                });
+
             modelBuilder.Entity("BankAccounts.Records.AccountEntity", b =>
                 {
                     b.HasOne("BankAccounts.AppplicationData.Records.UserEntity", "User")
@@ -137,6 +156,11 @@ namespace BankAccounts.AppplicationData.Migrations
             modelBuilder.Entity("BankAccounts.AppplicationData.Records.UserEntity", b =>
                 {
                     b.Navigation("Accounts");
+                });
+
+            modelBuilder.Entity("BankAccounts.Records.AccountEntity", b =>
+                {
+                    b.Navigation("Transactions");
                 });
 #pragma warning restore 612, 618
         }

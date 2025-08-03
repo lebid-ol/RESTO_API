@@ -21,5 +21,8 @@ namespace BankAccounts.Records
         // Navigation property
         public UserEntity User {  get; set; }
 
+        // Navigation property
+        public List<TransactionsEntity> Transactions { get; set; }
+
     }
 }
