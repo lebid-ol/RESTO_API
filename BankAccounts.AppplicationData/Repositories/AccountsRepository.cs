@@ -38,7 +38,8 @@ namespace BankAccounts.Repositories
                 AccountType = account.AccountType,
                 CreatedDate = account.CreatedDate,
                 Balance = account.Balance,
-                UpdateDate = account.UpdateDate
+                UpdateDate = account.UpdateDate,
+                UserId = account.UserId,
      
             };
 
@@ -81,7 +82,8 @@ namespace BankAccounts.Repositories
                     Balance = accountEntity.Balance,
                     CreatedDate = accountEntity.CreatedDate,
                     Id = accountEntity.Id,
-                    UpdateDate = accountEntity.UpdateDate
+                    UpdateDate = accountEntity.UpdateDate,
+                    TransactionList = transactionsList
                 };
 
                 return account;

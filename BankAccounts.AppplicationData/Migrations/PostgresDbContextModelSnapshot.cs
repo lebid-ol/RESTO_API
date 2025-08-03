@@ -51,7 +51,7 @@ namespace BankAccounts.AppplicationData.Migrations
 
                     b.HasIndex("AccountId");
 
-                    b.ToTable("Transactions");
+                    b.ToTable("Transactions", (string)null);
                 });
 
             modelBuilder.Entity("BankAccounts.AppplicationData.Records.UserEntity", b =>
@@ -94,7 +94,7 @@ namespace BankAccounts.AppplicationData.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("BankAccounts.Records.AccountEntity", b =>
@@ -128,7 +128,7 @@ namespace BankAccounts.AppplicationData.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Accounts");
+                    b.ToTable("Accounts", (string)null);
                 });
 
             modelBuilder.Entity("BankAccounts.AppplicationData.Records.TransactionsEntity", b =>

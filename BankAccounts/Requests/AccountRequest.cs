@@ -4,7 +4,7 @@ namespace BankAccounts.Shared.Models.Request
 {
     public class AccountRequest
     {
-        public int OwnerUserId { get; set; }
+        public int UserId { get; set; }
 
         [EnumValidation(typeof(AccountType))]
         public AccountType AccountType { get; set; }
