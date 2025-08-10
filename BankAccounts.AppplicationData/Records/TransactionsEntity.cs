@@ -13,16 +13,17 @@ namespace BankAccounts.AppplicationData.Records
     public class TransactionsEntity
     {
         public int Id { get; set; }
-        public string TransactionName { get; set; }
-        public string Description { get; set; }
-        public int AmountTransaction { get; set; }
+        public string TransactionName { get; set; } = default!;
+        public string? Description { get; set; }
+        public decimal AmountTransaction { get; set; }
         public DateTime Created { get; set; }
+        public TransactionType Type { get; set; }
 
 
         // Foreign key
         public int AccountId { get; set; }
 
         // Navigation property
-        public AccountEntity Account { get; set; }
+        public AccountEntity Account { get; set; } = default!;
     }
 }

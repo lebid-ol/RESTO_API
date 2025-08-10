@@ -9,7 +9,7 @@ namespace BankAccounts.Records
     public class AccountEntity
     {
         public int Id { get; set; }
-        public int Balance { get; set; }
+        public decimal Balance { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime UpdateDate { get; set; }
         public string AccountName { get; set; }

@@ -1,3 +1,4 @@
+using BankAccounts.ApplicationService.Services;
 using BankAccounts.AppplicationData.Db;
 using BankAccounts.AppplicationData.Repositories;
 using BankAccounts.Repositories;
@@ -35,9 +36,12 @@ builder.Services.AddDbContext<PostgresDbContext>(o =>
 
 builder.Services.AddScoped<IAccountRepository, AccountsRepository>();
 builder.Services.AddScoped<IAccountService, AccountService>();
+builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
 builder.Services.AddScoped<IUserRepository, UsersRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddMemoryCache();
+
 builder.Services.AddHttpClient<ICurrencyConverterClient, CurrencyConverterClient>(client =>
 {
     client.BaseAddress = new Uri("https://api.exchangeratesapi.io");

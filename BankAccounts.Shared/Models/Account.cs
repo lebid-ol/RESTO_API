@@ -6,7 +6,7 @@
         public string AccountName { get; set; }
         public AccountType AccountType { get; set; }
         public int UserId { get; set; }
-        public int Balance { get; set; }
+        public decimal Balance { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime UpdateDate { get; set; }
         public decimal? BalanceInEuro { get; set; }
