@@ -6,12 +6,9 @@ using System.Threading.Tasks;
 
 namespace BankAccounts.Shared.Models
 {
-    
-        public enum TransactionType
-        {
-            Credit = 1,
-            Debit = 2
-        }
-       
-   
+    public enum TransactionType
+    {
+        Credit = 1,
+        Debit = 2
+    }
 }

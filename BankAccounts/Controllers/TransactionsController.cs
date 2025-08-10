@@ -19,7 +19,7 @@ namespace BankAccounts.Controllers
     public class TransactionsController : ControllerBase
     {
         private readonly ITransactionService _transactionService;
-        private readonly PostgresDbContext _context;
+        //private readonly PostgresDbContext _context;
         private readonly IAccountService _accountService;
 
 
@@ -27,14 +27,14 @@ namespace BankAccounts.Controllers
            IAccountService accountService,
            ITransactionService transactionService,
            IOptions<AzureSettingsOptions> azureOptions,
-           PostgresDbContext context,
+           //PostgresDbContext context,
            IOptions<MyOptions> myOptions)
         {
             _transactionService = transactionService;
             _accountService = accountService;
             var azureSettings = azureOptions.Value;
             var mySettings = myOptions.Value;
-            _context = context;
+            //_context = context;
         }
 
         // GET: api/transactions/account/{accountId}

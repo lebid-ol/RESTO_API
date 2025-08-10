@@ -31,8 +31,6 @@ namespace BankAccounts.ApplicationService.Services
         {
             if (tx.AmountTransaction <= 0) throw new DomainException("Amount must be positive.");
 
-            var signedAmount = type == TransactionType.Debit ? -tx.AmountTransaction : tx.AmountTransaction;
-
             await using var dbtx = await _db.Database.BeginTransactionAsync();
 
             try
@@ -43,7 +41,7 @@ namespace BankAccounts.ApplicationService.Services
                 if (accEntity is null)
                     throw new NotFoundException($"Account {account.Id} not found.");
 
-                var delta = type == TransactionType.Debit ? -tx.AmountTransaction : tx.AmountTransaction;
+                decimal delta = type == TransactionType.Debit ? -tx.AmountTransaction : tx.AmountTransaction;
 
                 accEntity.Balance += delta;
                 if (accEntity.Balance < 0)
