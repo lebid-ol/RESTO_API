@@ -10,6 +10,7 @@ using BankAccounts.Shared.Models;
 using BankAccounts.Shared.Models.Request;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using System;
 
 
 namespace BankAccounts.Controllers
@@ -37,9 +38,12 @@ namespace BankAccounts.Controllers
             //_context = context;
         }
 
-        // GET: api/transactions/account/{accountId}
+        // GET: api/transactions/account/{accountId}?from=2025-08-01&to=2025-08-16
         [HttpGet("account/{accountId:int}")]
-        public async Task<ActionResult<List<TransactionResponse>>> GetTransactionsByAccount(int accountId)
+        public async Task<ActionResult<List<TransactionResponse>>> GetTransactionsByAccount(
+            int accountId,
+             [FromQuery] DateOnly? from,
+             [FromQuery] DateOnly? to)
         {
             try
             {
@@ -47,20 +51,19 @@ namespace BankAccounts.Controllers
                 var account = await _accountService.GetAccount(accountId);
                 if (account is null) return NotFound($"Account {accountId} not found");
 
-                var transactions = await _transactionService.GetTransactionsByAccount(accountId);
+                if (from.HasValue && to.HasValue && from > to)
+                    return BadRequest("'from' must be <= 'to'.");
 
-                var response = new List<TransactionResponse>();
-                foreach (var t in transactions)
+                var transactions = await _transactionService.GetTransactionsByAccount(accountId, from, to);
+
+                var response = transactions.Select(t => new TransactionResponse
                 {
-                    response.Add(new TransactionResponse
-                    {
-                        Id = t.Id,
-                        TransactionName = t.TransactionName,
-                        Description = t.Description ?? string.Empty,
-                        AmountTransaction = t.AmountTransaction,
-                        Created = t.Created
-                    });
-                }
+                    Id = t.Id,
+                    TransactionName = t.TransactionName,
+                    Description = t.Description ?? string.Empty,
+                    AmountTransaction = t.AmountTransaction,
+                    Created = t.Created.Date
+                }).ToList();
 
                 return Ok(response);
             }

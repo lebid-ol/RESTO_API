@@ -5,6 +5,7 @@ using BankAccounts.Repositories;
 using BankAccounts.Shared.Exceptions;
 using BankAccounts.Shared.Models;
 using Microsoft.EntityFrameworkCore;
+using System;
 
 namespace BankAccounts.ApplicationService.Services
 {
@@ -12,7 +13,7 @@ namespace BankAccounts.ApplicationService.Services
     public interface ITransactionService
     {
         Task<Transaction> AddTransaction(Transaction tx, Account account, TransactionType type);
-        Task<List<Transaction>> GetTransactionsByAccount(int accountId);
+        Task<List<Transaction>> GetTransactionsByAccount(int accountId, DateOnly? from = null, DateOnly? to = null);
 
     }
     public class TransactionService : ITransactionService
@@ -31,62 +32,14 @@ namespace BankAccounts.ApplicationService.Services
         {
             if (tx.AmountTransaction <= 0) throw new DomainException("Amount must be positive.");
 
-            await using var dbtx = await _db.Database.BeginTransactionAsync();
+            var transaction = await _transactionRepository.AddTransactionRecord(tx,account,type);
 
-            try
-            {
-                // 1) Берём отслеживаемую сущность аккаунта
-                var accEntity = await _db.Accounts
-                    .FirstOrDefaultAsync(a => a.Id == account.Id); // account.Id пришёл извне
-                if (accEntity is null)
-                    throw new NotFoundException($"Account {account.Id} not found.");
-
-                decimal delta = type == TransactionType.Debit ? -tx.AmountTransaction : tx.AmountTransaction;
-
-                accEntity.Balance += delta;
-                if (accEntity.Balance < 0)
-                    throw new DomainException("Insufficient funds.");
-
-                // ВАЖНО: если загрузили через этот же DbContext, вызывать Update() не нужно —
-                // EF уже отслеживает изменения. Достаточно SaveChangesAsync().
-
-                // 2) Пишем транзакцию (связываем по FK)
-                var txEntity = new TransactionsEntity
-                {
-                    AccountId = accEntity.Id,
-                    TransactionName = tx.TransactionName,
-                    Description = tx.Description,
-                    AmountTransaction = delta,            // decimal, со знаком
-                    Created = DateTime.UtcNow
-                };
-                _db.Transactions.Add(txEntity);
-
-                await _db.SaveChangesAsync();
-                await dbtx.CommitAsync();
-
-                // маппинг обратно, если нужен доменный объект:
-                return new Transaction
-                {
-                    Id = txEntity.Id,
-                    AccountId = txEntity.AccountId,
-                    TransactionName = txEntity.TransactionName,
-                    Description = txEntity.Description,
-                    AmountTransaction = txEntity.AmountTransaction,
-                    Created = txEntity.Created
-                };
-            }
-            catch
-            {
-                await dbtx.RollbackAsync();
-                throw;
-            }
-
+            return transaction;
         }
 
-       
-        public async Task<List<Transaction>> GetTransactionsByAccount(int accountId)
+        public async Task<List<Transaction>> GetTransactionsByAccount(int accountId, DateOnly? from = null, DateOnly? to = null)
         {
-            return await _transactionRepository.GetTransactionsByAccountFromDb(accountId);
+            return await _transactionRepository.GetTransactionsByAccountFromDb(accountId, from, to);
         }
     }
 }

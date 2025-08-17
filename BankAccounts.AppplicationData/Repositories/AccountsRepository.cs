@@ -53,43 +53,41 @@ namespace BankAccounts.Repositories
         public async Task<Account> GetOneAccountFromData(int accountId)
         {
             var accountEntity = await _postgresDbContext.Accounts
-                .Include(x => x.Transactions)
-                .FirstOrDefaultAsync(x => x.Id == accountId);
+               .Where(a => a.Id == accountId)
+               .Select(a => new Account
+               {
+                   AccountName = a.AccountName,
+                   AccountType = a.AccountType,
+                   Balance = a.Balance,
+                   CreatedDate = a.CreatedDate,
+                   Id = a.Id,
+                   UpdateDate = a.UpdateDate,
+                   TransactionList = a.Transactions
+                      .OrderByDescending(record => record.Created)
+                      .ThenByDescending(record => record.Id) // на случай одинаковой даты
+                      .Take(10)
+                      .Select(record => new Transaction
+                      {
+                          Id = record.Id,
+                          TransactionName = record.TransactionName,
+                          Description = record.Description,
+                          AmountTransaction = record.AmountTransaction,
+                          Created = record.Created
+                      })
+                      .ToList()
+               })
 
-            var transactionsList = new List<Transaction>();
+                .AsNoTracking()
+                .FirstOrDefaultAsync();
 
-            foreach (var record in accountEntity.Transactions)
+            if (accountEntity is null) 
             {
-                var transaction = new Transaction()
-                {
-                    Id = record.Id,
-                    TransactionName = record.TransactionName,
-                    Description = record.Description,
-                    AmountTransaction = record.AmountTransaction,
-                    Created = record.Created,
-                };
 
-                transactionsList.Add(transaction);
+                throw new NotFoundException("No account records found");
+                
             }
 
-
-            if (accountEntity != null) 
-            {
-                var account = new Account()
-                {
-                    AccountName = accountEntity.AccountName,
-                    AccountType = accountEntity.AccountType,
-                    Balance = accountEntity.Balance,
-                    CreatedDate = accountEntity.CreatedDate,
-                    Id = accountEntity.Id,
-                    UpdateDate = accountEntity.UpdateDate,
-                    TransactionList = transactionsList
-                };
-
-                return account;
-            }
-
-            throw new NotFoundException("No account records found");
+            return accountEntity;
         }
 
         public async Task<List<Account>> GetAllAccountsFromData()
