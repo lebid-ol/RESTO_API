@@ -11,7 +11,7 @@ namespace BankAccounts.ResponseModels
         public AccountType AccountType { get; set; }
         public decimal Balance { get; set; }
         public decimal? BalanceEuro { get; set; }
-        public List<Transaction> Transactions { get; set; }
+        public List<TransactionResponse> Transactions { get; set; } = new();
 
     }
 }

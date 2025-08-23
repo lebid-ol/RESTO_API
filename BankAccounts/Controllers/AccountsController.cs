@@ -1,4 +1,6 @@
-﻿using BankAccounts.AppplicationData.Db;
+﻿using BankAccounts.API.Responses;
+using BankAccounts.ApplicationService.Services;
+using BankAccounts.AppplicationData.Db;
 using BankAccounts.Exceptions;
 using BankAccounts.RequestModel;
 using BankAccounts.ResponseModels;
@@ -16,14 +18,17 @@ namespace BankAccounts.Controllers
     {
         private readonly IAccountService _accountService;
         private readonly PostgresDbContext _context;
+        private readonly ITransactionService _transactionService;
 
         public AccountsController(
             IAccountService accountService,
+            ITransactionService transactionService,
             IOptions<AzureSettingsOptions> azureOptions,
             PostgresDbContext context,
             IOptions<MyOptions> myOptions)
         {
             _accountService = accountService;
+            _transactionService = transactionService;
             var azureSettings = azureOptions.Value;
             var mySettings = myOptions.Value;
             _context = context;
@@ -69,38 +74,61 @@ namespace BankAccounts.Controllers
             }
         }
 
-        // GET api/<AccountsController>/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<AccountResponse>> GetAccountById([FromRoute] int id)
-        {
-            try
+        // GET api/account/{accountId}?from=2025-08-01&to=2025-08-16
+        [HttpGet("{Id:int}")]
+        public async Task<ActionResult<AccountResponse>> GetAccountById(
+            [FromRoute] int id,
+            [FromQuery] DateOnly? from,
+            [FromQuery] DateOnly? to)
+        { 
             {
-                var account = await _accountService.GetAccount(id);
+                try
+                {
+                    // Убеждаемся, что аккаунт существует
+                    var account = await _accountService.GetAccount(id);
+                    if (account is null) return NotFound($"Account {id} not found");
 
-                var response = new AccountResponse() 
-                { 
-                    Id = account.Id,
-                    AccountName = account.AccountName,
-                    AccountType = account.AccountType,
-                    Balance = account.Balance,
-                    BalanceEuro = account.BalanceInEuro,
-                    Transactions = account.TransactionList,
-                };
+                    if (from.HasValue && to.HasValue && from > to)
+                        return BadRequest("'from' must be <= 'to'.");
 
-                return Ok(response);
-            }
-            catch (NotFoundException ex)
-            {
-    
-                return NotFound(ex.Message);
-            }
-            catch (DontExistException ex)
-            {
-                return StatusCode(500, ex.Message);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, ex.Message);
+                    var transactions = await _transactionService.GetTransactionsByAccount(id, from, to);
+
+                    var response = transactions.Select(t => new TransactionResponse
+                    {
+                        Id = t.Id,
+                        TransactionName = t.TransactionName,
+                        Description = t.Description ?? string.Empty,
+                        AmountTransaction = t.AmountTransaction,
+                        Created = t.Created.Date
+                    }).ToList();
+
+
+                    var responseAccountWithTransactions = new AccountResponse()
+                    {
+                        Id = account.Id,
+                        AccountName = account.AccountName,
+                        AccountType = account.AccountType,
+                        Balance = account.Balance,
+                        BalanceEuro = account.BalanceInEuro,
+                        Transactions = response,
+                    };
+
+
+                    return Ok(responseAccountWithTransactions);
+
+                }
+                catch (NotFoundException ex)
+                {
+                    return NotFound(ex.Message);
+                }
+                catch (DontExistException ex)
+                {
+                    return StatusCode(500, ex.Message);
+                }
+                catch (Exception ex)
+                {
+                    return StatusCode(500, ex.Message);
+                }
             }
         }
 
