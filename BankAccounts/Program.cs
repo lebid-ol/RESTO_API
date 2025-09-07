@@ -42,6 +42,18 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddMemoryCache();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowBlazorClient",
+        policy =>
+        {
+            policy.AllowAnyOrigin()
+               .AllowAnyHeader()
+               .AllowAnyMethod();
+        });
+});
+
+
 builder.Services.AddHttpClient<ICurrencyConverterClient, CurrencyConverterClient>(client =>
 {
     client.BaseAddress = new Uri("https://api.exchangeratesapi.io");
@@ -92,7 +104,7 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 
 app.UseHttpsRedirection();
-
+app.UseCors("AllowBlazorClient");
 app.UseAuthorization();
 
 app.MapControllers();
