@@ -20,9 +20,9 @@ namespace BankAccounts.AppplicationData.Db
                 .HasForeignKey(account => account.UserId);
 
             modelBuilder.Entity<AccountEntity>()
-        .HasMany(account => account.Transactions)
-        .WithOne(transaction => transaction.Account)
-        .HasForeignKey(transaction => transaction.AccountId);
+                .HasMany(account => account.Transactions)
+                .WithOne(transaction => transaction.Account)
+                .HasForeignKey(transaction => transaction.AccountId);
 
 
 

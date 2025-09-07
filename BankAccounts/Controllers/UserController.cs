@@ -1,10 +1,10 @@
 ﻿using BankAccounts.AppplicationData.Records;
 using BankAccounts.Exceptions;
-using BankAccounts.ResponseModels;
 using BankAccounts.Services;
 using BankAccounts.Shared.Models;
 using BankAccounts.Shared.Models.Requests;
 using BankAccounts.Shared.Models.Responses;
+using BanksAccount.CQRS.Accounts.Commands.Create;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.VisualBasic;
 using static BankAccounts.Shared.Models.GenderType;

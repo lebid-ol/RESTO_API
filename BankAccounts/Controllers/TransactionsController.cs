@@ -2,9 +2,7 @@
 using BankAccounts.API.Responses;
 using BankAccounts.ApplicationService.Services;
 using BankAccounts.AppplicationData.Db;
-using BankAccounts.Exceptions;
-using BankAccounts.RequestModel;
-using BankAccounts.ResponseModels;
+
 using BankAccounts.Services;
 using BankAccounts.Shared.Models;
 using BankAccounts.Shared.Models.Request;

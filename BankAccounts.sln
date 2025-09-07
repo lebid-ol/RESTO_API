@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BankAccounts.Shared", "Bank
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpClientApp", "HttpClientApp\HttpClientApp.csproj", "{F105A207-3C27-4DCA-A3F3-5FEF5F6D0DB2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BanksAccount.CQRS", "BanksAccount.CQRS\BanksAccount.CQRS.csproj", "{8CF34443-B8B1-4A94-86AE-C78B90080BFF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{F105A207-3C27-4DCA-A3F3-5FEF5F6D0DB2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F105A207-3C27-4DCA-A3F3-5FEF5F6D0DB2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F105A207-3C27-4DCA-A3F3-5FEF5F6D0DB2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8CF34443-B8B1-4A94-86AE-C78B90080BFF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8CF34443-B8B1-4A94-86AE-C78B90080BFF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8CF34443-B8B1-4A94-86AE-C78B90080BFF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8CF34443-B8B1-4A94-86AE-C78B90080BFF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

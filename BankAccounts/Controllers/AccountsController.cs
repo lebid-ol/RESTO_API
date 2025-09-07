@@ -3,10 +3,13 @@ using BankAccounts.ApplicationService.Services;
 using BankAccounts.AppplicationData.Db;
 using BankAccounts.Exceptions;
 using BankAccounts.RequestModel;
-using BankAccounts.ResponseModels;
 using BankAccounts.Services;
 using BankAccounts.Shared.Models;
 using BankAccounts.Shared.Models.Request;
+using BanksAccount.CQRS.Accounts.Commands.Create;
+using BanksAccount.CQRS.Accounts.Commands.Delete;
+using BanksAccount.CQRS.Accounts.Queries;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
@@ -17,21 +20,21 @@ namespace BankAccounts.Controllers
     public class AccountsController : ControllerBase
     {
         private readonly IAccountService _accountService;
-        private readonly PostgresDbContext _context;
         private readonly ITransactionService _transactionService;
+        private readonly ISender _sender;
 
         public AccountsController(
             IAccountService accountService,
             ITransactionService transactionService,
             IOptions<AzureSettingsOptions> azureOptions,
-            PostgresDbContext context,
-            IOptions<MyOptions> myOptions)
+            IOptions<MyOptions> myOptions,
+            ISender sender)
         {
             _accountService = accountService;
             _transactionService = transactionService;
             var azureSettings = azureOptions.Value;
             var mySettings = myOptions.Value;
-            _context = context;
+            _sender = sender;
         }
 
         // GET: api/<AccountsController>
@@ -84,37 +87,41 @@ namespace BankAccounts.Controllers
             {
                 try
                 {
-                    // Убеждаемся, что аккаунт существует
-                    var account = await _accountService.GetAccount(id);
-                    if (account is null) return NotFound($"Account {id} not found");
+                    //// Убеждаемся, что аккаунт существует
+                    //var account = await _accountService.GetAccount(id);
+                    //if (account is null) return NotFound($"Account {id} not found");
 
-                    if (from.HasValue && to.HasValue && from > to)
-                        return BadRequest("'from' must be <= 'to'.");
+                    //if (from.HasValue && to.HasValue && from > to)
+                    //    return BadRequest("'from' must be <= 'to'.");
 
-                    var transactions = await _transactionService.GetTransactionsByAccount(id, from, to);
+                    //var transactions = await _transactionService.GetTransactionsByAccount(id, from, to);
 
-                    var response = transactions.Select(t => new TransactionResponse
-                    {
-                        Id = t.Id,
-                        TransactionName = t.TransactionName,
-                        Description = t.Description ?? string.Empty,
-                        AmountTransaction = t.AmountTransaction,
-                        Created = t.Created.Date
-                    }).ToList();
-
-
-                    var responseAccountWithTransactions = new AccountResponse()
-                    {
-                        Id = account.Id,
-                        AccountName = account.AccountName,
-                        AccountType = account.AccountType,
-                        Balance = account.Balance,
-                        BalanceEuro = account.BalanceInEuro,
-                        Transactions = response,
-                    };
+                    //var response = transactions.Select(t => new TransactionResponse
+                    //{
+                    //    Id = t.Id,
+                    //    TransactionName = t.TransactionName,
+                    //    Description = t.Description ?? string.Empty,
+                    //    AmountTransaction = t.AmountTransaction,
+                    //    Created = t.Created.Date
+                    //}).ToList();
 
 
-                    return Ok(responseAccountWithTransactions);
+                    //var responseAccountWithTransactions = new AccountResponse()
+                    //{
+                    //    Id = account.Id,
+                    //    AccountName = account.AccountName,
+                    //    AccountType = account.AccountType,
+                    //    Balance = account.Balance,
+                    //    BalanceEuro = account.BalanceInEuro,
+                    //    //Transactions = response,
+                    //};
+
+                    var query = new GetAccountByIdQuery(id);
+
+                    var response = await _sender.Send(query);
+
+
+                    return Ok(response);
 
                 }
                 catch (NotFoundException ex)
@@ -138,24 +145,12 @@ namespace BankAccounts.Controllers
         {
             try
             {
-                var newAccount = new Account()
-                {
-                    AccountName = request.AccountName,
-                    AccountType = request.AccountType,
-                    UserId = request.UserId,
-                };
+                var createCommand = new CreateAccountCommand(
+                   request.AccountName,
+                   request.AccountType,
+                   request.UserId);
 
-                var createdAccount = await _accountService.AddAccount(newAccount);
-
-                var response = new AccountResponse()
-                {
-                    AccountName = createdAccount.AccountName,
-                    Id = createdAccount.Id,
-                    AccountType = createdAccount.AccountType,
-                    Balance = createdAccount.Balance,
-                };
-
-                return Ok(response);
+                return await _sender.Send(createCommand);
             }
             catch (Exception ex) 
             {
@@ -207,7 +202,9 @@ namespace BankAccounts.Controllers
         {
             try
             {
-                await _accountService.DeleteAccount(id);
+                var deleteCommand = new DeleteAccountCommand(id);   
+
+                await _sender.Send(deleteCommand);  
 
                 return NoContent();
 

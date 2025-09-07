@@ -1,8 +1,6 @@
-﻿using BankAccounts.API.Responses;
-using BankAccounts.RequestModel;
-using BankAccounts.Shared.Models;
+﻿using BankAccounts.Shared.Models;
 
-namespace BankAccounts.ResponseModels
+namespace BanksAccount.CQRS.Accounts.Commands.Create
 {
     public class AccountResponse
     {
@@ -11,7 +9,7 @@ namespace BankAccounts.ResponseModels
         public AccountType AccountType { get; set; }
         public decimal Balance { get; set; }
         public decimal? BalanceEuro { get; set; }
-        public List<TransactionResponse> Transactions { get; set; } = new();
+        //public List<TransactionResponse> Transactions { get; set; } = new();
 
     }
 }

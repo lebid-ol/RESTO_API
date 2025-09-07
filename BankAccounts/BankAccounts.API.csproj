@@ -26,6 +26,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\BankAccounts.ApplicationService\BankAccounts.ApplicationService.csproj" />
+    <ProjectReference Include="..\BanksAccount.CQRS\BanksAccount.CQRS.csproj" />
   </ItemGroup>
 
   <ItemGroup>
