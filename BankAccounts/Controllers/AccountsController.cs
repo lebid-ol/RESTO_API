@@ -1,4 +1,5 @@
-﻿using BankAccounts.API.Responses;
+﻿using BankAccounts.API.RequestValidators;
+using BankAccounts.API.Responses;
 using BankAccounts.ApplicationService.Services;
 using BankAccounts.AppplicationData.Db;
 using BankAccounts.Exceptions;
@@ -22,6 +23,7 @@ namespace BankAccounts.Controllers
         private readonly IAccountService _accountService;
         private readonly ITransactionService _transactionService;
         private readonly ISender _sender;
+        private readonly AccountRequestValidator _accountRequestValidator;
 
         public AccountsController(
             IAccountService accountService,
@@ -35,6 +37,7 @@ namespace BankAccounts.Controllers
             var azureSettings = azureOptions.Value;
             var mySettings = myOptions.Value;
             _sender = sender;
+            _accountRequestValidator = new AccountRequestValidator();
         }
 
         // GET: api/<AccountsController>
@@ -87,39 +90,9 @@ namespace BankAccounts.Controllers
             {
                 try
                 {
-                    //// Убеждаемся, что аккаунт существует
-                    //var account = await _accountService.GetAccount(id);
-                    //if (account is null) return NotFound($"Account {id} not found");
-
-                    //if (from.HasValue && to.HasValue && from > to)
-                    //    return BadRequest("'from' must be <= 'to'.");
-
-                    //var transactions = await _transactionService.GetTransactionsByAccount(id, from, to);
-
-                    //var response = transactions.Select(t => new TransactionResponse
-                    //{
-                    //    Id = t.Id,
-                    //    TransactionName = t.TransactionName,
-                    //    Description = t.Description ?? string.Empty,
-                    //    AmountTransaction = t.AmountTransaction,
-                    //    Created = t.Created.Date
-                    //}).ToList();
-
-
-                    //var responseAccountWithTransactions = new AccountResponse()
-                    //{
-                    //    Id = account.Id,
-                    //    AccountName = account.AccountName,
-                    //    AccountType = account.AccountType,
-                    //    Balance = account.Balance,
-                    //    BalanceEuro = account.BalanceInEuro,
-                    //    //Transactions = response,
-                    //};
-
                     var query = new GetAccountByIdQuery(id);
-
+                    
                     var response = await _sender.Send(query);
-
 
                     return Ok(response);
 
@@ -145,6 +118,12 @@ namespace BankAccounts.Controllers
         {
             try
             {
+                var result = await _accountRequestValidator.ValidateAsync(request);
+                if (!result.IsValid)
+                {
+                    return BadRequest(result.Errors);
+                }
+                
                 var createCommand = new CreateAccountCommand(
                    request.AccountName,
                    request.AccountType,
