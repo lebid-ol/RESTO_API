@@ -10,6 +10,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.OpenApi.Models;
 using Scalar.AspNetCore;
 using System.Text.Json.Serialization;
+using BankAccounts.API.Middleware;
+using BankAccounts.API.RequestValidators;
 using BanksAccount.CQRS.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -114,6 +116,10 @@ app.MapControllers();
 app.UseSwagger();
 
 app.UseSwaggerUI();
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseMiddleware<ValidationExceptionHandlingMiddleware>();
+
 app.MapScalarApiReference();
 app.UseReDoc(options =>
 {

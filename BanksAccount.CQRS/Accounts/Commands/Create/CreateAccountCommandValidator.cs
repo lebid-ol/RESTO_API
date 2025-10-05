@@ -1,11 +1,10 @@
-﻿using BankAccounts.Shared.Models.Request;
-using FluentValidation;
+﻿using FluentValidation;
 
-namespace BankAccounts.API.RequestValidators;
+namespace BanksAccount.CQRS.Accounts.Commands.Create;
 
-public class AccountRequestValidator : AbstractValidator<AccountRequest>
+public class CreateAccountCommandValidator : AbstractValidator<CreateAccountCommand>
 {
-    public AccountRequestValidator()
+    public CreateAccountCommandValidator()
     {
         RuleFor(x  => x.UserId)
             .NotEmpty()

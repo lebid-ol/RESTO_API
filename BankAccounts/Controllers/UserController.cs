@@ -20,13 +20,11 @@ namespace BankAccounts.API.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
-        private readonly UserRequestValidator _userRequestValidator;
         private readonly ISender _sender;
 
         public UserController(IUserService userService, ISender sender)
         {
             _userService = userService;
-            _userRequestValidator = new UserRequestValidator();
             _sender = sender;
         }
 
@@ -110,12 +108,6 @@ namespace BankAccounts.API.Controllers
         {
             try
             {
-                var result = await _userRequestValidator.ValidateAsync(request);
-                if (!result.IsValid)
-                {
-                    return BadRequest(result.Errors);
-                }
-
                 var createCommand = new CreateUserCommand(
                    request.UserName,
                    request.Email,

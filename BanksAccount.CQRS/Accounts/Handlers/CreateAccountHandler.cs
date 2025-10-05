@@ -31,7 +31,7 @@ namespace BanksAccount.CQRS.Accounts.Handlers
 
             _postgresDbContext.Accounts.Add(accountEntity);
 
-            await _postgresDbContext.SaveChangesAsync();
+            await _postgresDbContext.SaveChangesAsync(cancellationToken);
 
             var response = new AccountResponse()
             {

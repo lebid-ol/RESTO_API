@@ -1,5 +1,4 @@
-﻿using BankAccounts.API.RequestValidators;
-using BankAccounts.API.Responses;
+﻿using BankAccounts.API.Responses;
 using BankAccounts.ApplicationService.Services;
 using BankAccounts.AppplicationData.Db;
 using BankAccounts.Exceptions;
@@ -23,7 +22,6 @@ namespace BankAccounts.Controllers
         private readonly IAccountService _accountService;
         private readonly ITransactionService _transactionService;
         private readonly ISender _sender;
-        private readonly AccountRequestValidator _accountRequestValidator;
 
         public AccountsController(
             IAccountService accountService,
@@ -37,7 +35,6 @@ namespace BankAccounts.Controllers
             var azureSettings = azureOptions.Value;
             var mySettings = myOptions.Value;
             _sender = sender;
-            _accountRequestValidator = new AccountRequestValidator();
         }
 
         // GET: api/<AccountsController>
@@ -116,25 +113,12 @@ namespace BankAccounts.Controllers
         [HttpPost]
         public async Task<ActionResult<AccountResponse>> CreateAccount([FromBody] AccountRequest request)
         {
-            try
-            {
-                var result = await _accountRequestValidator.ValidateAsync(request);
-                if (!result.IsValid)
-                {
-                    return BadRequest(result.Errors);
-                }
-                
-                var createCommand = new CreateAccountCommand(
-                   request.AccountName,
-                   request.AccountType,
-                   request.UserId);
+            var createCommand = new CreateAccountCommand(
+                request.AccountName,
+                request.AccountType,
+                request.UserId);
 
-                return await _sender.Send(createCommand);
-            }
-            catch (Exception ex) 
-            {
-                return StatusCode(500, ex.Message); 
-            }
+            return await _sender.Send(createCommand);
         }
 
         // PUT api/<AccountsController>/5
