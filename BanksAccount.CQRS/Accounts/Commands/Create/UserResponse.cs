@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using BankAccounts.Shared.Models;
 using BanksAccount.CQRS.Accounts.Commands.Create;
 using static BankAccounts.Shared.Models.GenderType;
 
-namespace BankAccounts.Shared.Models.Responses
+namespace BanksAccount.CQRS.Users.Commands.Create
 {
     public class UserResponse
     {

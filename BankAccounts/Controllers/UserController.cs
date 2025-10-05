@@ -1,13 +1,17 @@
-﻿using BankAccounts.AppplicationData.Records;
+﻿using BankAccounts.API.RequestValidators;
+using BankAccounts.ApplicationService.Services;
+using BankAccounts.AppplicationData.Db;
 using BankAccounts.Exceptions;
 using BankAccounts.Services;
 using BankAccounts.Shared.Models;
 using BankAccounts.Shared.Models.Requests;
-using BankAccounts.Shared.Models.Responses;
 using BanksAccount.CQRS.Accounts.Commands.Create;
+using BanksAccount.CQRS.Accounts.Commands.Delete;
+using BanksAccount.CQRS.Accounts.Queries;
+using BanksAccount.CQRS.Users.Commands.Create;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.VisualBasic;
-using static BankAccounts.Shared.Models.GenderType;
+using Microsoft.Extensions.Options;
 
 namespace BankAccounts.API.Controllers
 {
@@ -16,10 +20,14 @@ namespace BankAccounts.API.Controllers
     public class UserController : ControllerBase
     {
         private readonly IUserService _userService;
+        private readonly UserRequestValidator _userRequestValidator;
+        private readonly ISender _sender;
 
-        public UserController(IUserService userService)
+        public UserController(IUserService userService, ISender sender)
         {
             _userService = userService;
+            _userRequestValidator = new UserRequestValidator();
+            _sender = sender;
         }
 
         //GET: api/<UsersController>
@@ -71,31 +79,17 @@ namespace BankAccounts.API.Controllers
         [HttpGet("{id}")]
         public async Task <ActionResult<UserResponse>> GetUserById([FromRoute] int id)
         {
+
             try
             {
-                var user = await _userService.GetUser(id);
-               
-               var response = new UserResponse()
-                {
-                    UserName = user.UserName,
-                    Email = user.Email,
-                    UserLastName = user.UserLastName,
-                    PhoneNumber = user.PhoneNumber,
-                    DateOfBirth = user.DateOfBirth,
-                    Gender = user.Gender,
-                    BillingAddress = user.BillingAddress,
-                    Accounts = user.Accounts.Select(account => new AccountResponse
-                    {
-                        Id = account.Id,
-                        AccountName = account.AccountName,
-                        AccountType = account.AccountType,
-                        Balance = account.Balance
-                    }).ToList()
+                var query = new GetUserByIdQuery(id);
 
-               };
+                var response = await _sender.Send(query);
 
                 return Ok(response);
+
             }
+
             catch (NotFoundException ex)
             {
                 return NotFound(ex.Message);
@@ -114,37 +108,25 @@ namespace BankAccounts.API.Controllers
         [HttpPost]
         public async Task <ActionResult<UserResponse>> CreateUser([FromBody] UserRequest request)
         {
-           try
+            try
             {
-                var newUser = new User()
+                var result = await _userRequestValidator.ValidateAsync(request);
+                if (!result.IsValid)
                 {
-                    UserName = request.UserName,
-                    Gender = request.Gender,
-                    Email = request.Email,
-                    UserLastName = request.UserLastName, 
-                    PhoneNumber = request.PhoneNumber,
-                    DateOfBirth = request.DateOfBirth,
-                    BillingAddress = request.BillingAddress 
-                };
+                    return BadRequest(result.Errors);
+                }
 
-                var createdUser = await _userService.AddUser(newUser);
-
-                var response = new UserResponse()
-                {
-                    Id = createdUser.UserId,
-                    UserName = createdUser.UserName,
-                    Gender = createdUser.Gender,
-                    Email = createdUser.Email,
-                    UserLastName = createdUser.UserLastName,
-                    PhoneNumber = createdUser.PhoneNumber,
-                    DateOfBirth = createdUser.DateOfBirth,
-                    BillingAddress = createdUser.BillingAddress
-                };
-
-                return Ok(response);
-            }
-
-
+                var createCommand = new CreateUserCommand(
+                   request.UserName,
+                   request.Email,
+                   request.UserLastName,
+                   request.PhoneNumber,
+                   request.DateOfBirth,
+                   request.Gender,
+                   request.BillingAddress);
+ 
+                return await _sender.Send(createCommand);
+            }          
 
             catch (Exception ex)
             {
@@ -205,11 +187,15 @@ namespace BankAccounts.API.Controllers
         {
             try
             {
-               await  _userService.DeleteUser(id);
+                var deleteCommand = new DeleteUserCommand(id);
+
+                await _sender.Send(deleteCommand);
 
                 return NoContent();
 
             }
+
+          
             catch (NotFoundException ex)
             {
                 return NotFound(ex.Message);
