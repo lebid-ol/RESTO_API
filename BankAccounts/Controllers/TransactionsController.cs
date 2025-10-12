@@ -1,73 +1,48 @@
 ﻿using BankAccounts.API.Requests;
 using BankAccounts.API.Responses;
-using BankAccounts.ApplicationService.Services;
-using BankAccounts.AppplicationData.Db;
-
-using BankAccounts.Services;
-using BankAccounts.Shared.Models;
-using BankAccounts.Shared.Models.Request;
+using BanksAccount.CQRS.Transactions.Commands.Create;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
-using System;
+using BankAccounts.Exceptions;
+using BankAccounts.Shared.Exceptions;
+using BanksAccount.CQRS.Transactions.Queries;
+
 
 
 namespace BankAccounts.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/[controller]")]
     public class TransactionsController : ControllerBase
     {
-        private readonly ITransactionService _transactionService;
-        //private readonly PostgresDbContext _context;
-        private readonly IAccountService _accountService;
+        private readonly ISender _sender;
+        public TransactionsController(ISender sender) => _sender = sender;
 
-
-        public TransactionsController(
-           IAccountService accountService,
-           ITransactionService transactionService,
-           IOptions<AzureSettingsOptions> azureOptions,
-           //PostgresDbContext context,
-           IOptions<MyOptions> myOptions)
-        {
-            _transactionService = transactionService;
-            _accountService = accountService;
-            var azureSettings = azureOptions.Value;
-            var mySettings = myOptions.Value;
-            //_context = context;
-        }
-
-
-        // POST api/<TransactionsController>
         [HttpPost]
         public async Task<ActionResult<TransactionResponse>> CreateTransaction([FromBody] TransactionRequest request)
         {
             try
             {
-                var account = await _accountService.GetAccount(request.AccountId);
-                if (account is null) return NotFound($"Account {request.AccountId} not found");
+                if (request is null) return BadRequest("Body is required.");
 
-                var newTransaction = new Transaction()
-                {
-                    TransactionName = request.TransactionName,
-                    Description= request.Description,
-                    AmountTransaction = request.AmountTransaction,
-                    AccountId = request.AccountId    // FK
-    
-                };
+                var cmd = new CreateTransactionCommand(
+                    accountId: request.AccountId,
+                    transactionName: request.TransactionName,
+                    description: request.Description,
+                    amountTransaction: request.AmountTransaction,
+                    type: request.Type
+                );
 
-
-                var createdTransaction = await _transactionService.AddTransaction(newTransaction,  account, request.Type);
-
-                var response = new TransactionResponse()
-                {
-                    TransactionName = createdTransaction.TransactionName,
-                    Description = createdTransaction.Description,
-                    AmountTransaction = createdTransaction.AmountTransaction,
-                    Id = createdTransaction.Id,
-                    Created = createdTransaction.Created
-                };
-
+                var response = await _sender.Send(cmd);
                 return Ok(response);
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (DomainException ex)
+            {
+                return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
@@ -75,5 +50,28 @@ namespace BankAccounts.Controllers
             }
         }
 
+        // GET api/transactions/{accountId}?from=2025-08-01&to=2025-08-16
+        [HttpGet("{accountId:int}")]
+        public async Task<ActionResult<List<TransactionResponse>>> GetByAccount(
+            [FromRoute] int accountId,
+            [FromQuery] DateOnly? from,
+            [FromQuery] DateOnly? to)
+        {
+            try
+            {
+                var query = new GetTransactionsByQuery(accountId, from, to);
+                var response = await _sender.Send(query);
+                return Ok(response);
+            }
+            catch (NotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
     }
 }
+

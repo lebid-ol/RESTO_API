@@ -1,7 +1,7 @@
 ﻿using MediatR;
 
 
-namespace BanksAccount.CQRS.Accounts.Commands.Delete
+namespace BanksAccount.CQRS.Users.Commands.Delete
 {
     public  class DeleteUserCommand : IRequest
     {
