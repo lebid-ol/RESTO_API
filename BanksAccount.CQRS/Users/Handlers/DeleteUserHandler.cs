@@ -1,10 +1,10 @@
 ﻿using BankAccounts.AppplicationData.Db;
 using BankAccounts.Exceptions;
 using BankAccounts.Shared.Models;
-using BanksAccount.CQRS.Accounts.Commands.Delete;
+using BanksAccount.CQRS.Users.Commands.Delete;
 using MediatR;
 
-namespace BanksAccount.CQRS.Accounts.Handlers
+namespace BanksAccount.CQRS.Users.Handlers
 {
     public class DeleteUserHandler : IRequestHandler<DeleteUserCommand>
     {

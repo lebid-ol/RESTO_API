@@ -7,8 +7,12 @@ using BankAccounts.Shared.Models;
 using BankAccounts.Shared.Models.Requests;
 using BanksAccount.CQRS.Accounts.Commands.Create;
 using BanksAccount.CQRS.Accounts.Commands.Delete;
+using BanksAccount.CQRS.Accounts.Commands.Update;
 using BanksAccount.CQRS.Accounts.Queries;
 using BanksAccount.CQRS.Users.Commands.Create;
+using BanksAccount.CQRS.Users.Commands.Delete;
+using BanksAccount.CQRS.Users.Commands.Update;
+using BanksAccount.CQRS.Users.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -132,32 +136,18 @@ namespace BankAccounts.API.Controllers
         {
             try
             {
-                var updateUser = new UpdateUser()
-                {
-                    UserId = id,
-                    UserName = updateRequest.UserName,
-                    Email = updateRequest.Email,
-                    UserLastName = updateRequest.UserLastName,
-                    PhoneNumber = updateRequest.PhoneNumber,
-                    DateOfBirth = updateRequest.DateOfBirth,
-                    BillingAddress = updateRequest.BillingAddress
+            var cmd = new UpdateUserCommand(
+                id,
+                updateRequest.UserName,
+                updateRequest.Email,
+                updateRequest.UserLastName,
+                updateRequest.PhoneNumber,
+                updateRequest.DateOfBirth,
+                updateRequest.BillingAddress
+            );
 
-                };
-
-                var updatedUser = await _userService.UpdateUser(updateUser);
-
-                var response = new UserResponse()
-                {
-                    Id = updatedUser.UserId,
-                    UserName = updateUser.UserName,
-                    Email = updateUser.Email,
-                    UserLastName = updateUser.UserLastName,
-                    PhoneNumber = updateUser.PhoneNumber,
-                    DateOfBirth = updateUser.DateOfBirth,
-                    BillingAddress = updateUser.BillingAddress
-                };
-
-                return Accepted(response);
+                var response = await _sender.Send(cmd);
+                return Ok(response);
             }
             catch (NotFoundException ex)
             {

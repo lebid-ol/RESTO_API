@@ -1,9 +1,9 @@
 ﻿using BanksAccount.CQRS.Accounts.Commands.Create;
 using BanksAccount.CQRS.Users.Commands.Create;
-using MediatR; 
+using MediatR;
 
 
-namespace BanksAccount.CQRS.Accounts.Queries
+namespace BanksAccount.CQRS.Users.Queries
 {
     public class GetUserByIdQuery : IRequest<UserResponse>
     {

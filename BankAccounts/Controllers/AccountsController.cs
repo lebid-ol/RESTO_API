@@ -1,4 +1,5 @@
-﻿using BankAccounts.API.Responses;
+using BankAccounts.API.RequestValidators;
+using BanksAccount.CQRS.Accounts.Commands.Update;
 using BankAccounts.ApplicationService.Services;
 using BankAccounts.AppplicationData.Db;
 using BankAccounts.Exceptions;
@@ -127,23 +128,11 @@ namespace BankAccounts.Controllers
         {
             try
             {
-                var updateAccount = new UpdateAccount()
-                {
-                    Id = id,
-                    AccountName = updateRequest.AccountName,
-                };
+                var cmd = new UpdateAccountCommand(id, updateRequest.AccountName);
+                var response = await _sender.Send(cmd);
 
-                var updatedAccount = await _accountService.UpdateAccount(updateAccount);
+                return Ok(response);
 
-                var response = new AccountResponse()
-                {
-                    AccountName = updatedAccount.AccountName,
-                    Id = updatedAccount.Id,
-                    AccountType = updatedAccount.AccountType,
-                    Balance = updatedAccount.Balance
-                };
-
-                return Accepted(response);
             }
             catch (NotFoundException ex)
             {

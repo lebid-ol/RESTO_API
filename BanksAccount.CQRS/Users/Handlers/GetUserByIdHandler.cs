@@ -2,12 +2,12 @@
 using BankAccounts.Exceptions;
 using BankAccounts.Shared.Models;
 using BanksAccount.CQRS.Accounts.Commands.Create;
-using BanksAccount.CQRS.Accounts.Queries;
 using BanksAccount.CQRS.Users.Commands.Create;
+using BanksAccount.CQRS.Users.Queries;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-namespace BanksAccount.CQRS.Accounts.Handlers
+namespace BanksAccount.CQRS.Users.Handlers
 {
     public class GetUserByIdHandler : IRequestHandler<GetUserByIdQuery, UserResponse>
     {
@@ -41,7 +41,7 @@ namespace BanksAccount.CQRS.Accounts.Handlers
             if (userEntity != null)
             {
                 var user = new UserResponse()
-                {
+                {   
                     UserName = userEntity.UserName,
                     Email = userEntity.Email,
                     UserLastName = userEntity.UserLastName,
