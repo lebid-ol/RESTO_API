@@ -5,7 +5,6 @@ using BankAccounts.AppplicationData.Db;
 using BankAccounts.Exceptions;
 using BankAccounts.RequestModel;
 using BankAccounts.Services;
-using BankAccounts.Shared.Models;
 using BankAccounts.Shared.Models.Request;
 using BanksAccount.CQRS.Accounts.Commands.Create;
 using BanksAccount.CQRS.Accounts.Commands.Delete;
@@ -13,6 +12,7 @@ using BanksAccount.CQRS.Accounts.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using BankAccounts.Shared.Models;
 
 namespace BankAccounts.Controllers
 {
@@ -23,19 +23,24 @@ namespace BankAccounts.Controllers
         private readonly IAccountService _accountService;
         private readonly ITransactionService _transactionService;
         private readonly ISender _sender;
+        private readonly AccountRequestValidator _accountRequestValidator;
+        ILogger<AccountsController> _logger;
 
         public AccountsController(
             IAccountService accountService,
             ITransactionService transactionService,
             IOptions<AzureSettingsOptions> azureOptions,
             IOptions<MyOptions> myOptions,
-            ISender sender)
+            ISender sender,
+            ILogger<AccountsController> logger)
         {
             _accountService = accountService;
             _transactionService = transactionService;
             var azureSettings = azureOptions.Value;
             var mySettings = myOptions.Value;
             _sender = sender;
+            _accountRequestValidator = new AccountRequestValidator();
+            _logger = logger;
         }
 
         // GET: api/<AccountsController>
@@ -114,12 +119,20 @@ namespace BankAccounts.Controllers
         [HttpPost]
         public async Task<ActionResult<AccountResponse>> CreateAccount([FromBody] AccountRequest request)
         {
-            var createCommand = new CreateAccountCommand(
-                request.AccountName,
-                request.AccountType,
-                request.UserId);
+            _logger.LogInformation(
+               "Create Account endpoint called with: {UserId}, {AccountName}, {AccountType}",
+                   request.UserId,
+                   request.AccountName,
+                   request.AccountType);
 
-            return await _sender.Send(createCommand);
+            var createCommand = new CreateAccountCommand(
+                   request.AccountName,
+                   request.AccountType,
+                   request.UserId);
+
+                return await _sender.Send(createCommand);
+            
+          
         }
 
         // PUT api/<AccountsController>/5
@@ -136,6 +149,7 @@ namespace BankAccounts.Controllers
             }
             catch (NotFoundException ex)
             {
+                _logger.LogError($"Account with ID {id} not found");
                 return NotFound(ex.Message);
             }
             catch (DontExistException ex)
