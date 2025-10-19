@@ -11,6 +11,7 @@ using Microsoft.OpenApi.Models;
 using Scalar.AspNetCore;
 using System.Text.Json.Serialization;
 using BanksAccount.CQRS.Extensions;
+using BankAccounts.API;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -43,6 +44,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddMemoryCache();
 builder.Services.AddCQRS();
+builder.Services.AddSeq();
 
 
 builder.Services.AddCors(options =>
