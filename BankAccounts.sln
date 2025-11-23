@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpClientApp", "HttpClient
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BanksAccount.CQRS", "BanksAccount.CQRS\BanksAccount.CQRS.csproj", "{8CF34443-B8B1-4A94-86AE-C78B90080BFF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PingControllerTests", "PingControllerTests\PingControllerTests.csproj", "{A03FE9D1-CE00-422C-80E9-3F78A1AF1FF0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,8 +47,15 @@ Global
 		{8CF34443-B8B1-4A94-86AE-C78B90080BFF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8CF34443-B8B1-4A94-86AE-C78B90080BFF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8CF34443-B8B1-4A94-86AE-C78B90080BFF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A03FE9D1-CE00-422C-80E9-3F78A1AF1FF0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A03FE9D1-CE00-422C-80E9-3F78A1AF1FF0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A03FE9D1-CE00-422C-80E9-3F78A1AF1FF0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A03FE9D1-CE00-422C-80E9-3F78A1AF1FF0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {5114C192-51E7-4547-84E0-09111D7904E3}
 	EndGlobalSection
 EndGlobal

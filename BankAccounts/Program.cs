@@ -131,3 +131,5 @@ app.UseReDoc(options =>
 });
 
 app.Run();
+
+public partial class Program { }
