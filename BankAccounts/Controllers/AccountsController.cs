@@ -23,7 +23,6 @@ namespace BankAccounts.Controllers
         private readonly IAccountService _accountService;
         private readonly ITransactionService _transactionService;
         private readonly ISender _sender;
-        private readonly AccountRequestValidator _accountRequestValidator;
         ILogger<AccountsController> _logger;
 
         public AccountsController(
@@ -39,7 +38,6 @@ namespace BankAccounts.Controllers
             var azureSettings = azureOptions.Value;
             var mySettings = myOptions.Value;
             _sender = sender;
-            _accountRequestValidator = new AccountRequestValidator();
             _logger = logger;
         }
 
