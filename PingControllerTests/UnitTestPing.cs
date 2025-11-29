@@ -1,12 +1,13 @@
-using Microsoft.VisualStudio.TestPlatform.TestHost;
-using System.Net;
-using System.Net.Http.Json;
-using System.Text.Json;
-using BankAccounts;
+﻿using BankAccounts;
 using BankAccounts.Shared.Models;
 using BankAccounts.Shared.Models.Request;
 using BanksAccount.CQRS.Accounts.Commands.Create;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.VisualStudio.TestPlatform.TestHost;
+using System.Net;
+using System.Net.Http.Json;
+using System.Text;
+using System.Text.Json;
 using Xunit;
 
 namespace PingControllerTests
@@ -14,9 +15,12 @@ namespace PingControllerTests
     public class UnitTestPing : IClassFixture<CustomWebApplicationFactory>
     {
         private readonly HttpClient _client;
+        private readonly CustomWebApplicationFactory _factory;
+
 
         public UnitTestPing(CustomWebApplicationFactory factory)
         {
+            _factory = factory;
             _client = factory.CreateClient();
         }
 
@@ -35,23 +39,21 @@ namespace PingControllerTests
             Assert.Equal("1.0.0", body.Version);
             Assert.NotNull(body.ServerTimeUtc);
         }
-        
+
         [Fact]
         public async Task CreateAccount_Success_ReturnsNewAccoutnData()
         {
             // Act
-           var request = new AccountRequest
-           {
-              AccountName = "test name",
-              AccountType = AccountType.Checking,
-              UserId = 1
-           };
-           
-           var stringJson = JsonSerializer.Serialize(request);
-           var stringContent = new StringContent(stringJson);
+            var request = new AccountRequest
+            {
+                AccountName = "test name",
+                AccountType = AccountType.Checking,
+                UserId = 1
+            };
 
-
-           var response = await _client.PostAsync("/api/accounts", stringContent);
+            var json = JsonSerializer.Serialize(request);
+            var content = new StringContent(json, Encoding.UTF8, "application/json"); // ✅
+            var response = await _client.PostAsync("/api/accounts", content);
 
             // Assert
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -61,6 +63,7 @@ namespace PingControllerTests
             Assert.NotNull(body);
             Assert.Equal(body.AccountType, AccountType.Checking);
             Assert.Equal(body.Balance, 100);
+
         }
 
         private class PingResponse

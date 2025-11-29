@@ -1,9 +1,18 @@
 ﻿using BankAccounts.AppplicationData.Db;
+using BankAccounts.Shared.Cashe;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using StackExchange.Redis;
+using System;
+using System.Globalization;
+using System.Threading.Tasks;
 using Testcontainers.PostgreSql;
+using Testcontainers.Redis;
+using Xunit;
+
 
 namespace PingControllerTests;
 
@@ -11,33 +20,69 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>, IAsyn
 {
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder()
         .WithImage("postgres:17-alpine")
+        .WithDatabase("test_db")
+        .WithUsername("test_user")
+        .WithPortBinding(0, 5432)
         .Build();
-    
+
+    private readonly RedisContainer  _redis = new RedisBuilder()
+        .WithImage("redis:7-alpine")
+        .WithPortBinding(0, 6379) // host → container ✅
+        .Build();
+
+    public async Task InitializeAsync()
+    {
+        await _postgres.StartAsync();
+        await _redis.StartAsync();
+
+        using var scope = Services.CreateScope();
+        var ctx = scope.ServiceProvider.GetRequiredService<PostgresDbContext>();
+        await ctx.Database.MigrateAsync();
+    }
+
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        var connectionString = _postgres.GetConnectionString();
         builder.ConfigureServices(services =>
         {
-            var descriptor = services.Single(
-                d => d.ServiceType == typeof(DbContextOptions<PostgresDbContext>));
 
-            services.Remove(descriptor);
+            services.RemoveAll<DbContextOptions<PostgresDbContext>>();
 
-            services.AddDbContext<PostgresDbContext>(option =>
+            // ✅ Получить тестовый порт контейнера Postgres
+            var mappedPort = _postgres.GetMappedPublicPort(5432);
+
+            // ✅ Собрать новый connection string с тестовым портом
+            var connectionString = _postgres.GetConnectionString()
+                .Replace("5432/tcp", $"{mappedPort}/tcp"); // подстраховка если формат меняется
+
+            // ✅ Зарегистрировать DbContext с правильным connection string
+            services.AddDbContext<PostgresDbContext>(opt =>
+                opt.UseNpgsql(connectionString));
+
+
+            // Create Redis multiplexer AFTER container port is mapped
+            var port = _redis.GetMappedPublicPort(6379);
+            var endpoint = $"localhost:{port}";
+            var mux = ConnectionMultiplexer.Connect(new ConfigurationOptions
             {
-                option.UseNpgsql(_postgres.GetConnectionString());
+                EndPoints = { endpoint },
+                AbortOnConnectFail = false
             });
 
+            // Seed value
+            mux.GetDatabase().StringSet(
+                "Cad_rate", 1.31m.ToString(CultureInfo.InvariantCulture));
+
+            // Register in DI
+            services.AddSingleton<IConnectionMultiplexer>(mux);
         });
     }
 
-    public Task InitializeAsync()
+    public  async Task DisposeAsync()
     {
-        return _postgres.StartAsync();
-    }
+        await _redis.StopAsync();
 
-    public Task DisposeAsync()
-    {
-        return _postgres.DisposeAsync().AsTask();
+        await _postgres.DisposeAsync();
+        await _redis.DisposeAsync();
     }
 }
