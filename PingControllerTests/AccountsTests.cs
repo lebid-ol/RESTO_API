@@ -1,20 +1,18 @@
-﻿using BankAccounts;
-using BankAccounts.Shared.Models;
+﻿using BankAccounts.Shared.Models;
 using BankAccounts.Shared.Models.Request;
 using BanksAccount.CQRS.Accounts.Commands.Create;
-using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.VisualStudio.TestPlatform.TestHost;
 using System.Net;
-using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
+using BankAccounts.AppplicationData.Records;
+using BankAccounts.Records;
 using BankAccounts.Shared.Models.Requests;
 using BanksAccount.CQRS.Users.Commands.Create;
-using Xunit;
+using Microsoft.EntityFrameworkCore;
 
 namespace PingControllerTests
 {
-    public class UnitTestPing : IClassFixture<CustomWebApplicationFactory>
+    public class AccountsTests : IClassFixture<CustomWebApplicationFactory>
     {
         private readonly HttpClient _client;
         private readonly CustomWebApplicationFactory _factory;
@@ -27,30 +25,14 @@ namespace PingControllerTests
             }
         };
 
-        public UnitTestPing(CustomWebApplicationFactory factory)
+        public AccountsTests(CustomWebApplicationFactory factory)
         {
             _factory = factory;
             _client = factory.CreateClient();
         }
 
         [Fact]
-        public async Task Ping_Returns_Version_And_Time()
-        {
-            // Act
-            var response = await _client.GetAsync("/api/ping");
-
-            // Assert
-            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-
-            var body = await response.Content.ReadFromJsonAsync<PingResponse>();
-
-            Assert.NotNull(body);
-            Assert.Equal("1.0.0", body.Version);
-            Assert.NotNull(body.ServerTimeUtc);
-        }
-
-        [Fact]
-        public async Task CreateAccount_Success_ReturnsNewAccoutnData()
+        public async Task CreateAccount_Success_ReturnsNewAccountData()
         {
             // Arrange
             var userRequest = new UserRequest()
@@ -96,11 +78,55 @@ namespace PingControllerTests
             Assert.Equal(body.Balance, 100);
 
         }
-
-        private class PingResponse
+        
+        [Fact]
+        public async Task CreateAccountSeeded_Success_ReturnsNewAccountData()
         {
-            public string Version { get; set; }
-            public string ServerTimeUtc { get; set; }
+            // Arrange
+            await _factory.SeedAsync(async db =>
+            {
+                db.Users.Add(new UserEntity()
+                {
+                    Id = 4,
+                    BillingAddress = "test",
+                    DateOfBirth = new DateTime(),
+                    Email = "test",
+                    Gender = 0,
+                    PhoneNumber = "test",
+                    UserLastName = "test",
+                    UserName = "Test",
+                    BillingCity = "tes"
+                });
+            });
+            
+            var request = new AccountRequest
+            {
+                AccountName = "test name",
+                AccountType = AccountType.Checking,
+                UserId = 4
+            };
+
+            var json = JsonSerializer.Serialize(request);
+            var content = new StringContent(json, Encoding.UTF8, "application/json"); // ✅
+            
+            // Act
+            var response = await _client.PostAsync("/api/accounts", content);
+
+            // Assert
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+            var stringBody = await response.Content.ReadAsStringAsync();
+            
+            var body = JsonSerializer.Deserialize<AccountResponse>(stringBody, _jsonOptions);
+
+            Assert.NotNull(body);
+            Assert.Equal(body.AccountType, AccountType.Checking);
+            Assert.Equal(body.Balance, 100);
+
+            var accountEntity = await _factory.GetListFromDbAsync(db =>
+                db.Accounts.Where(a => a.UserId == 1).ToListAsync());
+                
+            Assert.NotNull(accountEntity);
         }
     }
 }
