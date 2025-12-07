@@ -56,7 +56,6 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>, IAsyn
             redisCacheClienttMoq.Setup(x => x.GetCadRate())
                 .ReturnsAsync(1.5m);
             
-            services.AddSingleton(currencyConverterClientMoq.Object);
             services.AddSingleton(redisCacheClienttMoq.Object);
         });
     }

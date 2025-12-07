@@ -12,21 +12,29 @@ namespace BanksAccount.CQRS.Users.Handlers
     public class GetUserByIdHandler : IRequestHandler<GetUserByIdQuery, UserResponse>
     {
         private readonly PostgresDbContext _postgresDbContext;
+
         public GetUserByIdHandler(PostgresDbContext postgresDbContext)
         {
             _postgresDbContext = postgresDbContext;
         }
+
         public async Task<UserResponse> Handle(GetUserByIdQuery request, CancellationToken cancellationToken)
         {
             var userEntity = await _postgresDbContext.Users
                 .Include(x => x.Accounts)
-                .FirstOrDefaultAsync(x => x.Id == request.UserId);
+                .FirstOrDefaultAsync(x => x.Id == request.UserId, cancellationToken);
+
+            // СНАЧАЛА проверяем, что нашли пользователя
+            if (userEntity == null)
+            {
+                throw new NotFoundException("No users records found");
+            }
 
             var accountList = new List<AccountResponse>();
 
             foreach (var record in userEntity.Accounts)
             {
-                var account = new AccountResponse()
+                var account = new AccountResponse
                 {
                     Id = record.Id,
                     AccountName = record.AccountName,
@@ -38,23 +46,20 @@ namespace BanksAccount.CQRS.Users.Handlers
                 accountList.Add(account);
             }
 
-            if (userEntity != null)
+            var user = new UserResponse
             {
-                var user = new UserResponse()
-                {   
-                    UserName = userEntity.UserName,
-                    Email = userEntity.Email,
-                    UserLastName = userEntity.UserLastName,
-                    PhoneNumber = userEntity.PhoneNumber,
-                    DateOfBirth = userEntity.DateOfBirth,
-                    BillingAddress = userEntity.BillingAddress,
-                    Accounts = accountList
-                };
+                Id = userEntity.Id,                       // <<< ВАЖНО
+                UserName = userEntity.UserName,
+                Email = userEntity.Email,
+                UserLastName = userEntity.UserLastName,
+                PhoneNumber = userEntity.PhoneNumber,
+                DateOfBirth = userEntity.DateOfBirth,
+                Gender = userEntity.Gender,
+                BillingAddress = userEntity.BillingAddress,
+                Accounts = accountList
+            };
 
-                return user;
-            }
-
-            throw new NotFoundException("No users records found");
+            return user;
         }
     }
 }

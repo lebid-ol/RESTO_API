@@ -34,25 +34,33 @@ namespace PingControllerTests
         [Fact]
         public async Task CreateAccount_Success_ReturnsNewAccountData()
         {
-            // Arrange
-            var userRequest = new UserRequest()
+            // Arrange: сначала создаём нормального пользователя через API
+            var userRequest = new UserRequest
             {
-                BillingAddress = "test",
-                DateOfBirth = new DateTime(),
-                Email = "test",
+                UserName = "Test",
+                UserLastName = "User",
+                Email = "test.account@example.com",
+                PhoneNumber = "123456789",
+                DateOfBirth = new DateTime(1990, 1, 1, 0, 0, 0, DateTimeKind.Utc),
                 Gender = 0,
-                PhoneNumber = "test",
-                UserLastName = "test",
-                UserName = "Test"
+                BillingAddress = "Some address"
             };
-            
-            var userJson = JsonSerializer.Serialize(userRequest);
-            var userContent = new StringContent(userJson, Encoding.UTF8, "application/json"); // ✅
+
+            var userJson = JsonSerializer.Serialize(userRequest, _jsonOptions);
+            var userContent = new StringContent(userJson, Encoding.UTF8, "application/json");
+
             var newUserResponse = await _client.PostAsync("/api/user", userContent);
+
+            // сразу проверим, что пользователь вообще успешно создался
+            Assert.Equal(HttpStatusCode.OK, newUserResponse.StatusCode);
+
             var userResponseString = await newUserResponse.Content.ReadAsStringAsync();
-            
             var userResponse = JsonSerializer.Deserialize<UserResponse>(userResponseString, _jsonOptions);
-            
+
+            Assert.NotNull(userResponse);
+            Assert.True(userResponse!.Id > 0);
+
+            // теперь создаём аккаунт для этого пользователя
             var request = new AccountRequest
             {
                 AccountName = "test name",
@@ -60,9 +68,9 @@ namespace PingControllerTests
                 UserId = userResponse.Id
             };
 
-            var json = JsonSerializer.Serialize(request);
-            var content = new StringContent(json, Encoding.UTF8, "application/json"); // ✅
-            
+            var json = JsonSerializer.Serialize(request, _jsonOptions);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
             // Act
             var response = await _client.PostAsync("/api/accounts", content);
 
@@ -70,15 +78,14 @@ namespace PingControllerTests
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
             var stringBody = await response.Content.ReadAsStringAsync();
-            
             var body = JsonSerializer.Deserialize<AccountResponse>(stringBody, _jsonOptions);
 
             Assert.NotNull(body);
-            Assert.Equal(body.AccountType, AccountType.Checking);
-            Assert.Equal(body.Balance, 100);
-
+            Assert.Equal(AccountType.Checking, body!.AccountType);
+            Assert.Equal(100, body.Balance);
         }
-        
+
+
         [Fact]
         public async Task CreateAccountSeeded_Success_ReturnsNewAccountData()
         {

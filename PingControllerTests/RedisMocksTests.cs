@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using BankAccounts.Shared.Cashe;
+using Microsoft.Extensions.DependencyInjection;
 using StackExchange.Redis;
 using System;
 using System.Globalization;
@@ -10,26 +11,21 @@ namespace PingControllerTests
 {
     public class RedisMocksTests : IClassFixture<CustomWebApplicationFactory>
     {
-        private readonly IConnectionMultiplexer _mux;
+        private readonly IRedisCacheClient _redisClient;
 
         public RedisMocksTests(CustomWebApplicationFactory factory)
         {
-            _mux = factory.Services.GetRequiredService<IConnectionMultiplexer>();
+            _redisClient = factory.Services.GetRequiredService<IRedisCacheClient>();
         }
 
         [Fact]
-        public async Task RedisContainer_ShouldReturnSeededCadRate()
+        public async Task RedisMock_ShouldReturnSeededCadRate()
         {
-            // ✅ Используем то же соединение и ту же фабрику, seed не теряем
-
-            var db = _mux.GetDatabase();
-
             // Act
-            var value = await db.StringGetAsync("Cad_rate");
-            var rate = decimal.Parse(value!, CultureInfo.InvariantCulture);
+            var rate = await _redisClient.GetCadRate();
 
             // Assert
-            Assert.Equal(1.31m, rate);
+            Assert.Equal(1.5m, rate); // то значение, которое мы задали в моках
         }
     }
 }
