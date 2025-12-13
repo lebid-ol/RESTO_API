@@ -2,9 +2,9 @@ name: ci-cqrs
 
 on:
   push:
-    branches: [ "CQRS" ]
+    branches: [ "master", "CQRS" ]
   pull_request:
-    branches: [ "CQRS" ]
+    branches: [ "master", "CQRS" ]
   workflow_dispatch:
 
 jobs:
