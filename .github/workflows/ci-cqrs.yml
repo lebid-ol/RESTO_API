@@ -29,7 +29,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "8.0.x"   # если проект на 7/6 — поменяй тут
+          dotnet-version: "8.0.x"
 
       - name: Cache NuGet
         uses: actions/cache@v4
@@ -50,7 +50,7 @@ jobs:
       - name: Test
         run: dotnet test $SOLUTION -c $CONFIGURATION --no-build --logger "trx;LogFileName=test_results.trx"
 
-      - name: Upload test results (TRX)
+      - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -60,26 +60,25 @@ jobs:
             **/test_results.trx
           if-no-files-found: ignore
 
-      # Если хочешь публиковать конкретный проект — лучше указать .csproj
-      # Например: dotnet publish BankAccounts/BankAccounts.csproj ...
-      - name: Publish
-        run: dotnet publish $SOLUTION -c $CONFIGURATION --no-build -o ./artifacts/publish
-
-      - name: Upload publish artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: publish
-          path: ./artifacts/publish
-          if-no-files-found: warn
-
   docker:
-    name: Docker Build (sanity)
+    name: Docker Build (debug)
     runs-on: ubuntu-latest
     needs: dotnet
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Debug files
+        run: |
+          echo "Current directory:"
+          pwd
+          echo ""
+          echo "Root files:"
+          ls -la
+          echo ""
+          echo "Searching for Dockerfile:"
+          find . -maxdepth 4 -iname "dockerfile" -print
 
       - name: Docker build
         run: docker build -t bankaccounts:${{ github.sha }} -f Dockerfile .
