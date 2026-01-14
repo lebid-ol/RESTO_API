@@ -2,23 +2,27 @@
 using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Bson;
 using System.Text.Json.Serialization;
+using BankAccounts.AppplicationData.Records;
 
 namespace BankAccounts.Records
 {
     public class AccountEntity
     {
-        [BsonId]
-        [BsonRepresentation(BsonType.ObjectId)]
-        public string Id { get; set; }
-        public int Balance { get; set; }
+        public int Id { get; set; }
+        public decimal Balance { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime UpdateDate { get; set; }
         public string AccountName { get; set; }
-
-        [JsonConverter(typeof(JsonStringEnumConverter))]
-        [BsonRepresentation(BsonType.String)]
         public AccountType AccountType { get; set; }
 
-        public string OwnerUserId { get; set; }
+        // Foreign key
+        public int UserId { get; set; }
+
+        // Navigation property
+        public UserEntity User {  get; set; }
+
+        // Navigation property
+        public List<TransactionsEntity> Transactions { get; set; }
+
     }
 }

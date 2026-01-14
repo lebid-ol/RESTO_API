@@ -1,43 +1,33 @@
 ﻿using BankAccounts.Exceptions;
-using System.Globalization;
 using BankAccounts.AppplicationData.Records;
-using System.Runtime.ConstrainedExecution;
-using static BankAccounts.Shared.Models.GenderType;
 using BankAccounts.Shared.Models;
-using BankAccounts.Repositories;
-using BankAccounts.AppplicationData.DbContext;
-using BankAccounts.Records;
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
-using System.Text.Json.Serialization;
+using BankAccounts.AppplicationData.Db;
 using MongoDB.Driver;
+using Microsoft.EntityFrameworkCore;
 
 namespace BankAccounts.AppplicationData.Repositories
 {
     public interface IUserRepository
     {
-        User AddUserRecord(User users);
-        Task <User> GetOneUserFromData(string userId);
-        Task <List<User>> GetAllUsersFromData();
+        Task<User> AddUserRecord(User users);
+        Task <User> GetOneUserFromData(int userId);
+        Task<List<User>> GetAllUsersFromData();
         Task <User> UpdateUserRecord(UpdateUser user);
-        Task DeleteUserFromData(string userId);
+        Task DeleteUserFromData(int userId);
        
         
     }
 
     public class UsersRepository : IUserRepository
     {
-        private readonly MongoDbContext _mongoContext;
+        private readonly PostgresDbContext _postgresContext;
 
-        public UsersRepository(
-            //IAccountRepository accountRepository,
-            MongoDbContext context)
+        public UsersRepository(PostgresDbContext postgresContext)
         {
-            //   _accountRepository = accountRepository;
-            _mongoContext = context;
+            _postgresContext = postgresContext;
         }
 
-        public User AddUserRecord(User user)
+        public async Task<User> AddUserRecord(User user)
         {
             var userEntity = new UserEntity
             {
@@ -45,22 +35,40 @@ namespace BankAccounts.AppplicationData.Repositories
                 Email = user.Email,
                 UserLastName = user.UserLastName,
                 PhoneNumber = user.PhoneNumber,
-                DateOfBirth = user.DateOfBirth,
+                DateOfBirth = user.DateOfBirth.ToUniversalTime(),
                 BillingAddress = user.BillingAddress,
             };
 
-            _mongoContext.Users.InsertOne(userEntity);
+            var newUserEntity = await _postgresContext.Users.AddAsync(userEntity);
+            await _postgresContext.SaveChangesAsync();
 
-            user.UserId = userEntity.UserId;
+            user.UserId = userEntity.Id;
+
             return user;
         }
 
 
-           public async Task <User> GetOneUserFromData(string userId)
-          {
-             
-            var taskResult = await _mongoContext.Users.FindAsync(x => x.UserId == userId);
-            var userEntity = taskResult.FirstOrDefault();
+        public async Task <User> GetOneUserFromData(int userId)
+        {
+            var userEntity = await _postgresContext.Users
+                .Include(x => x.Accounts)
+                .FirstOrDefaultAsync(x => x.Id == userId);
+
+            var accountList = new List<Account>();
+
+            foreach (var record in userEntity.Accounts)
+            {
+                var account = new Account()
+                {
+                    Id = record.Id,
+                    AccountName = record.AccountName,
+                    AccountType = record.AccountType,
+                    Balance = record.Balance,
+                    CreatedDate = record.CreatedDate,
+                };
+
+                accountList.Add(account);
+            }
 
             if (userEntity != null)
             {
@@ -72,7 +80,7 @@ namespace BankAccounts.AppplicationData.Repositories
                     PhoneNumber = userEntity.PhoneNumber,
                     DateOfBirth = userEntity.DateOfBirth,
                     BillingAddress = userEntity.BillingAddress,
-
+                    Accounts = accountList
                 };
 
                 return user;
@@ -84,16 +92,15 @@ namespace BankAccounts.AppplicationData.Repositories
 
         public async Task<List<User>> GetAllUsersFromData()
         {
-
-            var documents = await _mongoContext.Users.Find(new BsonDocument()).ToListAsync();
+            var users = await _postgresContext.Users.ToListAsync();
 
             var userList = new List<User>();
 
-            foreach (var record in documents)
+            foreach (var record in users)
             {
                 var user = new User()
                 {
-                    UserId = record.UserId,
+                    UserId = record.Id,
                     UserName = record.UserName,
                     Email = record.Email,
                     UserLastName = record.UserLastName,
@@ -113,66 +120,46 @@ namespace BankAccounts.AppplicationData.Repositories
 
         public async Task <User> UpdateUserRecord(UpdateUser user)
         {
-            var filter = Builders<UserEntity>.Filter.Eq(x => x.UserId, user.UserId);
+            var userToUpdate = await _postgresContext.Users.FindAsync(user.UserId);
 
-            var update = Builders<UserEntity>.Update
-                .Set(x => x.UserName, user.UserName)
-                .Set(x => x.Email, user.Email)
-                .Set(x => x.UserLastName, user.UserLastName)
-                .Set(x => x.PhoneNumber, user.PhoneNumber)
-                .Set(x => x.DateOfBirth, user.DateOfBirth)
-                .Set(x => x.BillingAddress, user.BillingAddress);
-
-        var updateResult = await _mongoContext.Users.UpdateOneAsync(filter, update);
-
-            if (updateResult.ModifiedCount == 1)
+            if (userToUpdate == null)
             {
-                var taskResult = await _mongoContext.Users.FindAsync(x => x.UserId == user.UserId);
-                var userEntity = taskResult.FirstOrDefault();
+                throw new NotFoundException("No users records found");
+            }
 
-                if (userEntity != null)
-                {
-                    var userUpdate = new User()
-                    {
-                        UserId = userEntity.UserId,
-                        UserName = userEntity.UserName,
-                        Email = userEntity.Email,
-                        UserLastName = userEntity.UserLastName,
-                        PhoneNumber = userEntity.PhoneNumber,
-                        DateOfBirth = userEntity.DateOfBirth,
-                        BillingAddress = userEntity.BillingAddress,
-                        Gender = userEntity.Gender
-                    };
+            userToUpdate.UserName = user.UserName;
+            userToUpdate.Email = user.Email;
+            userToUpdate.PhoneNumber = user.PhoneNumber;
+            userToUpdate.UserLastName = user.UserLastName;
+            userToUpdate.BillingAddress = user.BillingAddress;
+            userToUpdate.DateOfBirth = user.DateOfBirth.ToUniversalTime();
 
-                        return userUpdate;
-                    }
-                }
-                 if (updateResult.ModifiedCount > 1)
-                 {
-                   Console.WriteLine("MEssage to developer(problem with user update)");
-                   throw new Exception("Developer exception");
-                 }
-       
-                throw new NotFoundException("No user records found");
-            
+           await _postgresContext.SaveChangesAsync();
+
+            return new User
+            {
+                UserId = userToUpdate.Id,
+                DateOfBirth = userToUpdate.DateOfBirth,
+                BillingAddress = userToUpdate.BillingAddress,
+                UserLastName = userToUpdate.UserLastName,
+                PhoneNumber = userToUpdate.PhoneNumber,
+                Email = userToUpdate.Email,
+                UserName = userToUpdate.UserName,
+            };
         }
 
-        public async Task DeleteUserFromData(string userId)
+        public async Task DeleteUserFromData(int userId)
         {
-            var deleteResult = await _mongoContext.Users.DeleteOneAsync(x => x.UserId == userId);
+            var userToDelete = await _postgresContext.Users.FindAsync(userId);
 
-            if (deleteResult.DeletedCount == 1)
+            if (userToDelete == null)
             {
-                return;
+                throw new NotFoundException("No users records found");
             }
 
-            if (deleteResult.DeletedCount > 1)
-            {
-                Console.WriteLine("MEssage to developer");
-                throw new Exception("Developer exception");
-            }
+            _postgresContext.Users.Remove(userToDelete);
 
-            throw new NotFoundException("No users records found");
+            await _postgresContext.SaveChangesAsync();
         }
 
     }

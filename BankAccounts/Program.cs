@@ -1,12 +1,15 @@
-using System.Text.Json.Serialization;
-using BankAccounts.AppplicationData.DbContext;
+using BankAccounts.ApplicationService.Services;
+using BankAccounts.AppplicationData.Db;
 using BankAccounts.AppplicationData.Repositories;
 using BankAccounts.Repositories;
 using BankAccounts.Services;
+using BankAccounts.Shared.Cashe;
+using BankAccounts.Shared.Clients.CurrencyConver;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
 using Scalar.AspNetCore;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,16 +24,49 @@ var confiGbuilder = new ConfigurationBuilder()
 
 confiGbuilder.Build();
 
+builder.Services.AddDbContext<PostgresDbContext>(o =>
+{
+    var connectionString = builder.Configuration["ConnectionStrings:PostgreSQL"];
+    o.UseNpgsql(connectionString);
+});
 
-builder.Services.Configure<AzureSettingsOptions>(builder.Configuration.GetSection(AzureSettingsOptions.SectionName));
-builder.Services.Configure<MyOptions>(builder.Configuration.GetSection(MyOptions.SectionName));
+
+//builder.Services.Configure<AzureSettingsOptions>(builder.Configuration.GetSection(AzureSettingsOptions.SectionName));
+//builder.Services.Configure<MyOptions>(builder.Configuration.GetSection(MyOptions.SectionName));
 
 builder.Services.AddScoped<IAccountRepository, AccountsRepository>();
 builder.Services.AddScoped<IAccountService, AccountService>();
+builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
 builder.Services.AddScoped<IUserRepository, UsersRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<ITransactionService, TransactionService>();
+builder.Services.AddMemoryCache();
 
-builder.Services.AddSingleton<MongoDbContext>();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowBlazorClient",
+        policy =>
+        {
+            policy.AllowAnyOrigin()
+               .AllowAnyHeader()
+               .AllowAnyMethod();
+        });
+});
+
+
+builder.Services.AddHttpClient<ICurrencyConverterClient, CurrencyConverterClient>(client =>
+{
+    client.BaseAddress = new Uri("https://api.exchangeratesapi.io");
+});
+
+builder.Services.AddHttpClient<IRedisCacheClient, RedisCacheClient>(client =>
+{
+    client.BaseAddress = new Uri("https://api.exchangeratesapi.io");
+});
+
+builder.Services.AddSingleton<IRedisCacheClient, RedisCacheClient>();
+
+//builder.Services.AddSingleton<MongoDbContext>();
 
 //Add automapper
 //builder.Services.AddAutoMapper(typeof(Program));
@@ -68,7 +104,7 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 
 app.UseHttpsRedirection();
-
+app.UseCors("AllowBlazorClient");
 app.UseAuthorization();
 
 app.MapControllers();

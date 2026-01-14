@@ -69,7 +69,7 @@ namespace BankAccounts.API.Controllers
 
         // GET api/<UsersController>/5
         [HttpGet("{id}")]
-        public async Task <ActionResult<UserResponse>> GetUserById([FromRoute] string id)
+        public async Task <ActionResult<UserResponse>> GetUserById([FromRoute] int id)
         {
             try
             {
@@ -127,7 +127,7 @@ namespace BankAccounts.API.Controllers
                     BillingAddress = request.BillingAddress 
                 };
 
-                var createdUser = _userService.AddUser(newUser);
+                var createdUser = await _userService.AddUser(newUser);
 
                 var response = new UserResponse()
                 {
@@ -154,7 +154,7 @@ namespace BankAccounts.API.Controllers
 
         // PUT api/<UsersController>/5
         [HttpPut("{id}")]
-        public async Task <ActionResult<UserResponse>>UpdateUserById([FromRoute] string id, [FromBody] UpdateUserRequest updateRequest)
+        public async Task <ActionResult<UserResponse>>UpdateUserById([FromRoute] int id, [FromBody] UpdateUserRequest updateRequest)
         {
             try
             {
@@ -174,6 +174,7 @@ namespace BankAccounts.API.Controllers
 
                 var response = new UserResponse()
                 {
+                    Id = updatedUser.UserId,
                     UserName = updateUser.UserName,
                     Email = updateUser.Email,
                     UserLastName = updateUser.UserLastName,
@@ -200,7 +201,7 @@ namespace BankAccounts.API.Controllers
 
         // DELETE api/<UsersController>/5
         [HttpDelete("{id}")]
-        public async Task <ActionResult<string>> DeleteUserById([FromRoute] string id)
+        public async Task <ActionResult<string>> DeleteUserById([FromRoute] int id)
         {
             try
             {
