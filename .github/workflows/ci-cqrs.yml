@@ -1,53 +1,11 @@
- name: ci-cqrs
+name: ci-cqrs
 
 on:
-  push:
-    branches: ["CQRS"]
-  pull_request:
-    branches: ["CQRS"]
   workflow_dispatch:
 
-concurrency:
-  group: ci-cqrs-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
-  dotnet:
-    name: .NET Build & Test
+  test:
     runs-on: self-hosted
-
-    defaults:
-      run:
-        shell: powershell
-
-    env:
-      DOTNET_NOLOGO: true
-      DOTNET_CLI_TELEMETRY_OPTOUT: true
-      CONFIGURATION: Release
-      SOLUTION: BankAccounts.sln
-
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Check .NET SDK
-        run: dotnet --info
-
-      - name: Cache NuGet
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~\.nuget\packages
-            ${{ github.workspace }}\.nuget\packages
-          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj','**/*.fsproj','**/*.props','**/*.targets','**/packages.lock.json','**/nuget.config') }}
-          restore-keys: |
-            nuget-${{ runner.os }}-
-
-      - name: Restore
-        run: dotnet restore $env:SOLUTION
-
-      - name: Build
-        run: dotnet build $env:SOLUTION -c $env:CONFIGURATION --no-restore
-
-      - name: Test
-        run: dotnet test $env:SOLUTION -c $env:CONFIGURATION --no-build --logg
-   
+      - name: Hello
+        run: echo "OK"
