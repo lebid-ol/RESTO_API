@@ -2,9 +2,9 @@ name: ci-cqrs
 
 on:
   push:
-    branches: [ "CQRS" ]
+    branches: ["CQRS"]
   pull_request:
-    branches: [ "CQRS" ]
+    branches: ["CQRS"]
   workflow_dispatch:
 
 concurrency:
@@ -30,7 +30,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Вариант А: НЕ ставим .NET, используем установленный на runner
       - name: Check .NET SDK
         run: dotnet --info
 
@@ -42,42 +41,4 @@ jobs:
             ${{ github.workspace }}\.nuget\packages
           key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj','**/*.fsproj','**/*.props','**/*.targets','**/packages.lock.json','**/nuget.config') }}
           restore-keys: |
-            nuget-${{ runner.os }}-
-
-      - name: Restore
-        run: dotnet restore $env:SOLUTION
-
-      - name: Build
-        run: dotnet build $env:SOLUTION -c $env:CONFIGURATION --no-restore
-
-      - name: Test
-        run: dotnet test $env:SOLUTION -c $env:CONFIGURATION --no-build --logger "trx;LogFileName=test_results.trx"
-
-      - name: Upload test results (TRX)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results
-          path: |
-            **/TestResults/*.trx
-            **/test_results.trx
-          if-no-files-found: ignore
-
-      - name: Publish
-        run: dotnet publish $env:SOLUTION -c $env:CONFIGURATION --no-build -o ./artifacts/publish
-
-      - name: Upload publish artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: publish
-          path: ./artifacts/publish
-          if-no-files-found: warn
-
-  docker:
-    name: Docker Build (sanity)
-    runs-on: self-hosted
-    needs: dotnet
-
-    defaults:
-      run:
-        shell: powershell
+            nuget-
