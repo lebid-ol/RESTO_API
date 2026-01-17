@@ -26,10 +26,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: "8.0.x"   # если проект на 7/6 — поменяй тут
+      # Вариант А: НЕ ставим .NET, используем установленный на runner
+      - name: Check .NET SDK
+        run: dotnet --info
 
       - name: Cache NuGet
         uses: actions/cache@v4
@@ -60,8 +59,6 @@ jobs:
             **/test_results.trx
           if-no-files-found: ignore
 
-      # Если хочешь публиковать конкретный проект — лучше указать .csproj
-      # Например: dotnet publish BankAccounts/BankAccounts.csproj ...
       - name: Publish
         run: dotnet publish $SOLUTION -c $CONFIGURATION --no-build -o ./artifacts/publish
 
@@ -74,12 +71,26 @@ jobs:
 
   docker:
     name: Docker Build (sanity)
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: dotnet
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Если Docker на runner не установлен/не доступен — просто пропускаем сборку
+      - name: Check Docker
+        id: docker_check
+        shell: pwsh
+        run: |
+          if (Get-Command docker -ErrorAction SilentlyContinue) {
+            "available=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+            docker version
+          } else {
+            "available=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+            Write-Host "Docker is not installed or not in PATH. Skipping docker build."
+          }
+
       - name: Docker build
+        if: steps.docker_check.outputs.available == 'true'
         run: docker build -t bankaccounts:${{ github.sha }} -f Dockerfile .
