@@ -27,7 +27,6 @@ jobs:
       DOTNET_CLI_TELEMETRY_OPTOUT: "true"
       CONFIGURATION: Release
       SOLUTION: BankAccounts.sln
-      DOCKER_HOST: npipe:////./pipe/docker_engine
 
     steps:
       - name: Checkout
@@ -36,16 +35,23 @@ jobs:
       - name: Check .NET SDK
         run: dotnet --info
 
-      - name: Check Docker daemon (required)
+      # --- DOCKER: обязателен ---
+      - name: Docker Desktop (required)
         run: |
           if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
             Write-Error "Docker CLI not found"
             exit 1
           }
 
-          docker context ls
-          docker context show
+          # ВАЖНО: если DOCKER_HOST задан где-то в системе/раннере — он ломает context
+          Remove-Item Env:DOCKER_HOST -ErrorAction SilentlyContinue
 
+          docker context ls
+
+          # Для Docker Desktop в Linux-mode это правильный контекст
+          docker context use desktop-linux
+
+          docker context show
           docker version
 
       - name: Cache NuGet
