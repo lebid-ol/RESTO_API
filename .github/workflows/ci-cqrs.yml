@@ -1,11 +1,105 @@
 name: ci-cqrs
 
 on:
+  push:
+    branches: ["CQRS"]
+  pull_request:
+    branches: ["CQRS"]
   workflow_dispatch:
 
+concurrency:
+  group: ci-cqrs-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  test:
+  dotnet:
+    name: .NET Build & Test
     runs-on: self-hosted
+
+    defaults:
+      run:
+        shell: powershell
+
+    env:
+      DOTNET_NOLOGO: true
+      DOTNET_CLI_TELEMETRY_OPTOUT: true
+      CONFIGURATION: Release
+      SOLUTION: BankAccounts.sln
+
     steps:
-      - name: Hello
-        run: echo "OK"
+      - uses: actions/checkout@v4
+
+      - name: Check .NET SDK
+        run: dotnet --info
+
+      - name: Cache NuGet
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~\.nuget\packages
+            ${{ github.workspace }}\.nuget\packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj','**/*.fsproj','**/*.props','**/*.targets','**/packages.lock.json','**/nuget.config') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
+
+      - name: Restore
+        run: dotnet restore $env:SOLUTION
+
+      - name: Build
+        run: dotnet build $env:SOLUTION -c $env:CONFIGURATION --no-restore
+
+      - name: Test
+        run: dotnet test $env:SOLUTION -c $env:CONFIGURATION --no-build --logger "trx;LogFileName=test_results.trx"
+
+      - name: Upload test results (TRX)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            **/TestResults/*.trx
+            **/test_results.trx
+          if-no-files-found: ignore
+
+      - name: Publish
+        run: dotnet publish $env:SOLUTION -c $env:CONFIGURATION --no-build -o ./artifacts/publish
+
+      - name: Upload publish artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: publish
+          path: ./artifacts/publish
+          if-no-files-found: warn
+
+  docker:
+    name: Docker Build (sanity)
+    runs-on: self-hosted
+    needs: dotnet
+
+    defaults:
+      run:
+        shell: powershell
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check Docker
+        id: docker_check
+        run: |
+          if (Get-Command docker -ErrorAction SilentlyContinue) {
+            docker info *> $null
+            if ($LASTEXITCODE -eq 0) {
+              "available=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+              docker version
+            } else {
+              "available=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+              Write-Host "Docker exists but daemon is not reachable. Skipping docker build."
+            }
+          } else {
+            "available=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+            Write-Host "Docker is not installed or not in PATH. Skipping docker build."
+          }
+
+      - name: Docker build
+        if: steps.docker_check.outputs.available == 'true'
+        run: docker build -t bankaccounts:${{ github.sha }} -f Dockerfile .
