@@ -2,9 +2,11 @@ name: ci-cqrs
 
 on:
   push:
-    branches: ["CQRS"]
+    branches:
+      - CQRS
   pull_request:
-    branches: ["CQRS"]
+    branches:
+      - CQRS
   workflow_dispatch:
 
 concurrency:
@@ -25,4 +27,65 @@ jobs:
       DOTNET_CLI_TELEMETRY_OPTOUT: "true"
       CONFIGURATION: Release
       SOLUTION: BankAccounts.sln
-      # ЯВНО указываем Windows pipe — критично для Docker
+      DOCKER_HOST: npipe:////./pipe/docker_engine
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check .NET SDK
+        run: dotnet --info
+
+      - name: Check Docker daemon (required)
+        run: |
+          if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
+            Write-Error "Docker CLI not found"
+            exit 1
+          }
+
+          docker context ls
+          docker context show
+
+          docker version
+
+      - name: Cache NuGet
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~\.nuget\packages
+            ${{ github.workspace }}\.nuget\packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj','**/*.fsproj','**/*.props','**/*.targets','**/packages.lock.json','**/nuget.config') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
+
+      - name: Restore
+        run: dotnet restore $env:SOLUTION
+
+      - name: Build
+        run: dotnet build $env:SOLUTION -c $env:CONFIGURATION --no-restore
+
+      - name: Test
+        run: dotnet test $env:SOLUTION -c $env:CONFIGURATION --no-build --logger "trx;LogFileName=test_results.trx"
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            **/TestResults/*.trx
+            **/test_results.trx
+          if-no-files-found: ignore
+
+      - name: Publish
+        run: dotnet publish $env:SOLUTION -c $env:CONFIGURATION --no-build -o artifacts/publish
+
+      - name: Upload publish artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: publish
+          path: artifacts/publish
+          if-no-files-found: warn
+
+      - name: Docker build
+        run: docker build -t bankaccounts:${{ github.sha }} -f Dockerfile .
