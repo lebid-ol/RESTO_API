@@ -17,57 +17,40 @@ jobs:
     runs-on: self-hosted
 
     env:
-      DOTNET_NOLOGO: "true"
-      DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+      DOTNET_NOLOGO: true
+      DOTNET_CLI_TELEMETRY_OPTOUT: true
       CONFIGURATION: Release
       SOLUTION: BankAccounts.sln
-      # чтобы не ловить OutOfMemory на MSBuild/restore/test
-      DOTNET_CLI_DISABLE_PARALLEL: "1"
-      MSBUILDDISABLENODEREUSE: "1"
-      # важное: не даём DOCKER_HOST ломать контекст
-      DOCKER_HOST: ""
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # На self-hosted .NET уже установлен — просто проверяем
       - name: Check .NET SDK
-        shell: powershell
+        shell: pwsh
         run: dotnet --info
-
-      # Проверяем Docker + принудительно ставим правильный контекст для Docker Desktop
-      - name: Check Docker (for Testcontainers)
-        shell: powershell
-        run: |
-          $ErrorActionPreference = "Stop"
-          $env:DOCKER_HOST = ""
-          docker context use desktop-linux | Out-Host
-          docker version
-          docker info
 
       - name: Cache NuGet
         uses: actions/cache@v4
         with:
           path: |
-            C:\Users\runneradmin\.nuget\packages
-            C:\Users\actions-runner\.nuget\packages
-            ${{ github.workspace }}\.nuget\packages
-          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj','**/*.props','**/*.targets','**/packages.lock.json','**/nuget.config') }}
+            ~/.nuget/packages
+            ${{ github.workspace }}/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj','**/*.fsproj','**/*.props','**/*.targets','**/packages.lock.json','**/nuget.config') }}
           restore-keys: |
             nuget-${{ runner.os }}-
 
       - name: Restore
-        shell: powershell
-        run: dotnet restore "${{ env.SOLUTION }}"
+        shell: pwsh
+        run: dotnet restore "$env:SOLUTION"
 
       - name: Build
-        shell: powershell
-        run: dotnet build "${{ env.SOLUTION }}" -c "${{ env.CONFIGURATION }}" --no-restore
+        shell: pwsh
+        run: dotnet build "$env:SOLUTION" -c "$env:CONFIGURATION" --no-restore
 
       - name: Test
-        shell: powershell
-        run: dotnet test "${{ env.SOLUTION }}" -c "${{ env.CONFIGURATION }}" --no-build --logger "trx;LogFileName=test_results.trx"
+        shell: pwsh
+        run: dotnet test "$env:SOLUTION" -c "$env:CONFIGURATION" --no-build --logger "trx;LogFileName=test_results.trx"
 
       - name: Upload test results (TRX)
         if: always()
@@ -75,19 +58,19 @@ jobs:
         with:
           name: test-results
           path: |
-            **\TestResults\*.trx
-            **\test_results.trx
+            **/TestResults/*.trx
+            **/test_results.trx
           if-no-files-found: ignore
 
       - name: Publish
-        shell: powershell
-        run: dotnet publish "${{ env.SOLUTION }}" -c "${{ env.CONFIGURATION }}" --no-build -o .\artifacts\publish
+        shell: pwsh
+        run: dotnet publish "$env:SOLUTION" -c "$env:CONFIGURATION" --no-build -o ./artifacts/publish
 
       - name: Upload publish artifact
         uses: actions/upload-artifact@v4
         with:
           name: publish
-          path: .\artifacts\publish
+          path: ./artifacts/publish
           if-no-files-found: warn
 
   docker:
@@ -95,21 +78,20 @@ jobs:
     runs-on: self-hosted
     needs: dotnet
 
-    env:
-      DOCKER_HOST: ""
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Check Docker
-        shell: powershell
+      - name: Ensure Docker Desktop Linux context
+        shell: pwsh
         run: |
-          $ErrorActionPreference = "Stop"
-          $env:DOCKER_HOST = ""
-          docker context use desktop-linux | Out-Host
+          # IMPORTANT: убираем DOCKER_HOST, чтобы не ломал context
+          Remove-Item Env:DOCKER_HOST -ErrorAction SilentlyContinue
+
+          docker context ls
+          docker context use desktop-linux
           docker version
 
       - name: Docker build
-        shell: powershell
+        shell: pwsh
         run: docker build -t bankaccounts:${{ github.sha }} -f Dockerfile .
