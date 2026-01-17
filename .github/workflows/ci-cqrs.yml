@@ -1,3 +1,18 @@
+name: ci-cqrs
+
+on:
+  push:
+    branches:
+      - CQRS
+  pull_request:
+    branches:
+      - CQRS
+  workflow_dispatch:
+
+concurrency:
+  group: ci-cqrs-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   dotnet:
     name: .NET + Tests + Publish
@@ -10,9 +25,6 @@ jobs:
     env:
       DOTNET_NOLOGO: "true"
       DOTNET_CLI_TELEMETRY_OPTOUT: "true"
-      NUGET_XMLDOC_MODE: skip
-      DOTNET_gcServer: "0"
-      DOTNET_GCHeapHardLimit: "2147483648"
       CONFIGURATION: Release
       SOLUTION: BankAccounts.sln
 
@@ -23,12 +35,19 @@ jobs:
       - name: Check .NET SDK
         run: dotnet --info
 
+      # --- DOCKER: обязателен ---
       - name: Docker Desktop (required)
         run: |
-          if (-not (Get-Command docker -ErrorAction SilentlyContinue)) { throw "Docker CLI not found" }
+          if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
+            Write-Error "Docker CLI not found"
+            exit 1
+          }
+          # ВАЖНО: если DOCKER_HOST задан где-то в системе/раннере — он ломает context
           Remove-Item Env:DOCKER_HOST -ErrorAction SilentlyContinue
+          docker context ls
+          # Для Docker Desktop в Linux-mode это правильный контекст
           docker context use desktop-linux
-          docker info | Out-Null
+          docker context show
           docker version
 
       - name: Cache NuGet
@@ -44,11 +63,11 @@ jobs:
       - name: Restore
         run: dotnet restore $env:SOLUTION
 
-      - name: Build (low memory)
-        run: dotnet build $env:SOLUTION -c $env:CONFIGURATION --no-restore /m:1
+      - name: Build
+        run: dotnet build $env:SOLUTION -c $env:CONFIGURATION --no-restore
 
-      - name: Test (low memory)
-        run: dotnet test $env:SOLUTION -c $env:CONFIGURATION --no-build --logger "trx;LogFileName=test_results.trx" -- RunConfiguration.MaxCpuCount=1
+      - name: Test
+        run: dotnet test $env:SOLUTION -c $env:CONFIGURATION --no-build --logger "trx;LogFileName=test_results.trx"
 
       - name: Upload test results
         if: always()
@@ -82,9 +101,6 @@ jobs:
     env:
       DOTNET_NOLOGO: "true"
       DOTNET_CLI_TELEMETRY_OPTOUT: "true"
-      NUGET_XMLDOC_MODE: skip
-      DOTNET_gcServer: "0"
-      DOTNET_GCHeapHardLimit: "2147483648"
       CONFIGURATION: Release
       SOLUTION: BankAccounts.sln
 
@@ -92,12 +108,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # --- DOCKER: обязателен ---
       - name: Docker Desktop (required)
         run: |
-          if (-not (Get-Command docker -ErrorAction SilentlyContinue)) { throw "Docker CLI not found" }
+          if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
+            Write-Error "Docker CLI not found"
+            exit 1
+          }
+          # ВАЖНО: если DOCKER_HOST задан где-то в системе/раннере — он ломает context
           Remove-Item Env:DOCKER_HOST -ErrorAction SilentlyContinue
+          docker context ls
+          # Для Docker Desktop в Linux-mode это правильный контекст
           docker context use desktop-linux
-          docker info | Out-Null
+          docker context show
           docker version
 
       - name: Docker build
