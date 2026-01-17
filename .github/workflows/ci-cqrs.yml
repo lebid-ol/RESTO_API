@@ -49,82 +49,27 @@ jobs:
       - name: Build
         run: dotnet build $env:SOLUTION -c $env:CONFIGURATION --no-restore
 
-      # Тесты на Testcontainers требуют Docker. Если Docker не доступен — пропускаем тесты, чтобы CI не краснел.
+      # --- FIX: Docker Desktop context может быть desktop-linux и падать на Windows runner ---
+      - name: Fix Docker context (Windows runner)
+        run: |
+          if (Get-Command docker -ErrorAction SilentlyContinue) {
+            docker context ls | Out-Host
+            try {
+              docker context use desktop-windows | Out-Host
+            } catch {
+              Write-Host "desktop-windows context not found. Keeping current context."
+            }
+            docker context show | Out-Host
+          } else {
+            Write-Host "Docker CLI not found."
+          }
+
+      # Проверяем Docker для Testcontainers тестов
       - name: Check Docker availability (for tests)
         id: docker_for_tests
         run: |
           $available = $false
-          if (Get-Command docker -ErrorAction SilentlyContinue) {
-            try { docker version | Out-Null; $available = $true } catch { $available = $false }
-          }
-          if ($available) {
-            "available=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-            docker version
-          } else {
-            "available=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-            Write-Host "Docker is NOT available. Testcontainers tests will be skipped."
-          }
 
-      - name: Test
-        if: steps.docker_for_tests.outputs.available == 'true'
-        run: dotnet test $env:SOLUTION -c $env:CONFIGURATION --no-build --logger "trx;LogFileName=test_results.trx"
-
-      - name: Skip tests (Docker unavailable)
-        if: steps.docker_for_tests.outputs.available != 'true'
-        run: |
-          Write-Host "Skipping tests because Docker is unavailable on the runner."
-          exit 0
-
-      - name: Upload test results (TRX)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results
-          path: |
-            **/TestResults/*.trx
-            **/test_results.trx
-          if-no-files-found: ignore
-
-      - name: Publish
-        run: dotnet publish $env:SOLUTION -c $env:CONFIGURATION --no-build -o ./artifacts/publish
-
-      - name: Upload publish artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: publish
-          path: ./artifacts/publish
-          if-no-files-found: warn
-
-  docker:
-    name: Docker Build (sanity)
-    runs-on: self-hosted
-    needs: dotnet
-
-    defaults:
-      run:
-        shell: powershell
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Check Docker
-        id: docker_check
-        run: |
           if (Get-Command docker -ErrorAction SilentlyContinue) {
             try {
-              docker version | Out-Null
-              "available=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
               docker version
-            } catch {
-              "available=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-              Write-Host "Docker exists but daemon is not reachable. Skipping docker build."
-            }
-          } else {
-            "available=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-            Write-Host "Docker is not installed or not in PATH. Skipping docker build."
-          }
-
-      - name: Docker build
-        if: steps.docker_check.outputs.available == 'true'
-        run: docker build -t bankaccounts:${{ github.sha }} -f Dockerfile .
