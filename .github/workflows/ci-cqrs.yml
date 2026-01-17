@@ -12,8 +12,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  dotnet:
-    name: .NET Build & Test
+  ci:
+    name: .NET + Docker + Tests
     runs-on: self-hosted
 
     defaults:
@@ -25,51 +25,4 @@ jobs:
       DOTNET_CLI_TELEMETRY_OPTOUT: "true"
       CONFIGURATION: Release
       SOLUTION: BankAccounts.sln
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Check .NET SDK
-        run: dotnet --info
-
-      - name: Cache NuGet
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~\.nuget\packages
-            ${{ github.workspace }}\.nuget\packages
-          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj','**/*.fsproj','**/*.props','**/*.targets','**/packages.lock.json','**/nuget.config') }}
-          restore-keys: |
-            nuget-${{ runner.os }}-
-
-      - name: Restore
-        run: dotnet restore $env:SOLUTION
-
-      - name: Build
-        run: dotnet build $env:SOLUTION -c $env:CONFIGURATION --no-restore
-
-      # --- FIX: Docker Desktop context может быть desktop-linux и падать на Windows runner ---
-      - name: Fix Docker context (Windows runner)
-        run: |
-          if (Get-Command docker -ErrorAction SilentlyContinue) {
-            docker context ls | Out-Host
-            try {
-              docker context use desktop-windows | Out-Host
-            } catch {
-              Write-Host "desktop-windows context not found. Keeping current context."
-            }
-            docker context show | Out-Host
-          } else {
-            Write-Host "Docker CLI not found."
-          }
-
-      # Проверяем Docker для Testcontainers тестов
-      - name: Check Docker availability (for tests)
-        id: docker_for_tests
-        run: |
-          $available = $false
-
-          if (Get-Command docker -ErrorAction SilentlyContinue) {
-            try {
-              docker version
+      # ЯВНО указываем Windows pipe — критично для Docker
