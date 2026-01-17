@@ -14,40 +14,59 @@ concurrency:
 jobs:
   dotnet:
     name: .NET Build & Test
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     env:
       DOTNET_NOLOGO: "true"
       DOTNET_CLI_TELEMETRY_OPTOUT: "true"
       CONFIGURATION: Release
       SOLUTION: BankAccounts.sln
+      # чтобы не ловить OutOfMemory на MSBuild/restore/test
+      DOTNET_CLI_DISABLE_PARALLEL: "1"
+      MSBUILDDISABLENODEREUSE: "1"
+      # важное: не даём DOCKER_HOST ломать контекст
+      DOCKER_HOST: ""
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: "8.0.x"
+      # На self-hosted .NET уже установлен — просто проверяем
+      - name: Check .NET SDK
+        shell: powershell
+        run: dotnet --info
+
+      # Проверяем Docker + принудительно ставим правильный контекст для Docker Desktop
+      - name: Check Docker (for Testcontainers)
+        shell: powershell
+        run: |
+          $ErrorActionPreference = "Stop"
+          $env:DOCKER_HOST = ""
+          docker context use desktop-linux | Out-Host
+          docker version
+          docker info
 
       - name: Cache NuGet
         uses: actions/cache@v4
         with:
           path: |
-            ~/.nuget/packages
-            ${{ github.workspace }}/.nuget/packages
-          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj','**/*.fsproj','**/*.props','**/*.targets','**/packages.lock.json','**/nuget.config') }}
+            C:\Users\runneradmin\.nuget\packages
+            C:\Users\actions-runner\.nuget\packages
+            ${{ github.workspace }}\.nuget\packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj','**/*.props','**/*.targets','**/packages.lock.json','**/nuget.config') }}
           restore-keys: |
             nuget-${{ runner.os }}-
 
       - name: Restore
+        shell: powershell
         run: dotnet restore "${{ env.SOLUTION }}"
 
       - name: Build
+        shell: powershell
         run: dotnet build "${{ env.SOLUTION }}" -c "${{ env.CONFIGURATION }}" --no-restore
 
       - name: Test
+        shell: powershell
         run: dotnet test "${{ env.SOLUTION }}" -c "${{ env.CONFIGURATION }}" --no-build --logger "trx;LogFileName=test_results.trx"
 
       - name: Upload test results (TRX)
@@ -56,31 +75,41 @@ jobs:
         with:
           name: test-results
           path: |
-            **/TestResults/*.trx
-            **/test_results.trx
+            **\TestResults\*.trx
+            **\test_results.trx
           if-no-files-found: ignore
 
       - name: Publish
-        run: dotnet publish "${{ env.SOLUTION }}" -c "${{ env.CONFIGURATION }}" --no-build -o ./artifacts/publish
+        shell: powershell
+        run: dotnet publish "${{ env.SOLUTION }}" -c "${{ env.CONFIGURATION }}" --no-build -o .\artifacts\publish
 
       - name: Upload publish artifact
         uses: actions/upload-artifact@v4
         with:
           name: publish
-          path: ./artifacts/publish
+          path: .\artifacts\publish
           if-no-files-found: warn
 
   docker:
     name: Docker Build (sanity)
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: dotnet
+
+    env:
+      DOCKER_HOST: ""
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Docker version
-        run: docker version
+      - name: Check Docker
+        shell: powershell
+        run: |
+          $ErrorActionPreference = "Stop"
+          $env:DOCKER_HOST = ""
+          docker context use desktop-linux | Out-Host
+          docker version
 
       - name: Docker build
+        shell: powershell
         run: docker build -t bankaccounts:${{ github.sha }} -f Dockerfile .
