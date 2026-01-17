@@ -18,7 +18,7 @@ jobs:
 
     defaults:
       run:
-        shell: pwsh
+        shell: powershell
 
     env:
       DOTNET_NOLOGO: "true"
@@ -33,122 +33,7 @@ jobs:
       - name: Check .NET SDK
         run: dotnet --info
 
-      # Проверка/запуск Docker (нужен для Testcontainers)
       - name: Check Docker availability
         id: docker_check
         run: |
-          $available = $false
-
-          if (Get-Command docker -ErrorAction SilentlyContinue) {
-            try {
-              docker version | Out-Null
-              $available = $true
-            } catch {
-              $available = $false
-            }
-          }
-
-          if (-not $available) {
-            Write-Host "Docker not available. Trying to start Docker Desktop service..."
-            try {
-              # Docker Desktop на Windows обычно как сервис com.docker.service
-              $svc = Get-Service -Name "com.docker.service" -ErrorAction SilentlyContinue
-              if ($svc -and $svc.Status -ne "Running") {
-                Start-Service "com.docker.service"
-                Start-Sleep -Seconds 5
-              }
-              docker version | Out-Null
-              $available = $true
-            } catch {
-              $available = $false
-            }
-          }
-
-          if ($available) {
-            "available=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-            docker version
-          } else {
-            "available=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-            Write-Host "Docker is NOT available. Testcontainers tests will be skipped."
-          }
-
-      - name: Cache NuGet
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.nuget/packages
-            ${{ github.workspace }}\.nuget\packages
-          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj','**/*.fsproj','**/*.props','**/*.targets','**/packages.lock.json','**/nuget.config') }}
-          restore-keys: |
-            nuget-${{ runner.os }}-
-
-      - name: Restore
-        run: dotnet restore $env:SOLUTION
-
-      - name: Build
-        run: dotnet build $env:SOLUTION -c $env:CONFIGURATION --no-restore
-
-      # Тесты гоняем только если Docker доступен (иначе всё упадёт на Testcontainers)
-      - name: Test
-        if: steps.docker_check.outputs.available == 'true'
-        run: dotnet test $env:SOLUTION -c $env:CONFIGURATION --no-build --logger "trx;LogFileName=test_results.trx"
-
-      - name: Skip tests (Docker unavailable)
-        if: steps.docker_check.outputs.available != 'true'
-        run: |
-          Write-Host "Skipping tests because Docker is unavailable on the runner."
-          exit 0
-
-      - name: Upload test results (TRX)
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results
-          path: |
-            **/TestResults/*.trx
-            **/test_results.trx
-          if-no-files-found: ignore
-
-      - name: Publish
-        run: dotnet publish $env:SOLUTION -c $env:CONFIGURATION --no-build -o ./artifacts/publish
-
-      - name: Upload publish artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: publish
-          path: ./artifacts/publish
-          if-no-files-found: warn
-
-  docker:
-    name: Docker Build (sanity)
-    runs-on: self-hosted
-    needs: dotnet
-
-    defaults:
-      run:
-        shell: pwsh
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Check Docker
-        id: docker_check
-        run: |
-          if (Get-Command docker -ErrorAction SilentlyContinue) {
-            try {
-              docker version | Out-Null
-              "available=true" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-              docker version
-            } catch {
-              "available=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-              Write-Host "Docker exists but daemon is not reachable. Skipping docker build."
-            }
-          } else {
-            "available=false" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-            Write-Host "Docker is not installed or not in PATH. Skipping docker build."
-          }
-
-      - name: Docker build
-        if: steps.docker_check.outputs.available == 'true'
-        run: docker build -t bankaccounts:${{ github.sha }} -f Dockerfile .
+          $avai
